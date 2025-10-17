@@ -104,7 +104,7 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
           <Button
             variant="ghost"
             onClick={onBack}
-            className="mb-6 hover:bg-black/5 text-black"
+            className="mb-6 hover:bg-muted"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
@@ -116,19 +116,19 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black/5 border-2 border-black/10 mb-4">
-            <Unlock className="w-8 h-8 text-black" strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted border-2 border-border mb-4">
+            <Unlock className="w-8 h-8" strokeWidth={1.5} />
           </div>
-          <h1 className="text-4xl mb-3 text-black">Retrieve Message</h1>
-          <p className="text-[#707070]">
+          <h1 className="text-4xl mb-3 text-foreground">Retrieve Message</h1>
+          <p className="text-muted-foreground">
             Extract hidden messages from steganography files
           </p>
         </motion.div>
 
-        <Card className="border-[#D0D0D0] bg-white shadow-lg p-8">
+        <Card className="border-border bg-card shadow-lg p-8">
           <div className="space-y-6">
             <div>
-              <label className="block mb-3 text-sm text-black">Upload File</label>
+              <label className="block mb-3 text-sm text-foreground">Upload File</label>
               <FileUpload
                 onFileSelect={handleFileSelect}
                 acceptedTypes="image/*,audio/*"
@@ -145,12 +145,12 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-3"
                 >
-                  <div className="flex items-center justify-between text-sm text-black">
+                  <div className="flex items-center justify-between text-sm text-foreground">
                     <span>Extracting message...</span>
                     <span>{progress}%</span>
                   </div>
                   <Progress value={progress} className="h-2" />
-                  <div className="flex items-center justify-center gap-2 text-xs text-[#707070]">
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -169,17 +169,17 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                   className="space-y-4"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <CheckCircle2 className="w-6 h-6 text-black" />
+                    <CheckCircle2 className="w-6 h-6 text-foreground" />
                     <div>
-                      <h4 className="text-black">Message Extracted Successfully!</h4>
-                      <p className="text-sm text-[#707070]">
+                      <h4 className="text-foreground">Message Extracted Successfully!</h4>
+                      <p className="text-sm text-muted-foreground">
                         Hidden content has been revealed
                       </p>
                     </div>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-[#F5F5F5] border border-[#D0D0D0]">
-                    <p className="whitespace-pre-wrap leading-relaxed text-black">
+                  <div className="p-6 rounded-lg bg-card border border-border">
+                    <p className="whitespace-pre-wrap leading-relaxed text-foreground">
                       {extractedMessage}
                     </p>
                   </div>
@@ -187,7 +187,7 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                   <div className="flex gap-3">
                     <Button
                       onClick={handleCopy}
-                      className="flex-1 bg-black text-white hover:bg-[#303030]"
+                      className="flex-1"
                     >
                       <Copy className="w-4 h-4 mr-2" />
                       Copy Message
@@ -195,7 +195,7 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                     <Button
                       onClick={handleReset}
                       variant="outline"
-                      className="flex-1 border-[#D0D0D0] text-black hover:bg-black/5"
+                      className="flex-1 hover:bg-muted"
                     >
                       Extract Another
                     </Button>
@@ -207,13 +207,13 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="p-6 rounded-lg bg-[#F5F5F5] border border-[#D0D0D0]"
+                  className="p-6 rounded-lg bg-card border border-border"
                 >
                   <div className="flex items-start gap-3 mb-4">
-                    <AlertCircle className="w-6 h-6 text-[#505050] flex-shrink-0" />
+                    <AlertCircle className="w-6 h-6 text-muted-foreground flex-shrink-0" />
                     <div>
-                      <h4 className="text-black">No Hidden Message Found</h4>
-                      <p className="text-sm text-[#707070] mt-1">
+                      <h4 className="text-foreground">No Hidden Message Found</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
                         This file doesn't appear to contain any hidden steganography data. It may
                         be a regular file without embedded messages.
                       </p>
@@ -222,7 +222,7 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                   <Button
                     onClick={handleReset}
                     variant="outline"
-                    className="w-full border-[#D0D0D0] text-black hover:bg-black/5"
+                    className="w-full hover:bg-muted"
                   >
                     Try Another File
                   </Button>
@@ -248,7 +248,7 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                 <Button
                   onClick={handleExtract}
                   disabled={!selectedFile}
-                  className="w-full bg-black text-white hover:bg-[#303030] disabled:bg-[#D0D0D0] disabled:text-[#808080]"
+                  className="w-full disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <Unlock className="w-4 h-4 mr-2" />
                   Extract Message
@@ -262,10 +262,10 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-6 p-4 rounded-lg bg-black/5 border border-black/10"
+          className="mt-6 p-4 rounded-lg bg-muted border border-border"
         >
-          <p className="text-sm text-[#707070]">
-            <span className="text-black">💡 Tip:</span> Only files that have been processed
+          <p className="text-sm text-muted-foreground">
+            <span className="text-foreground">💡 Tip:</span> Only files that have been processed
             with steganography tools will contain hidden messages. Regular files will return no results.
           </p>
         </motion.div>

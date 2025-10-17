@@ -7,7 +7,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,6 +26,25 @@ from ..watermark import WatermarkEmbedder, WatermarkExtractor, WatermarkDetector
 configure_logging()
 
 app = FastAPI(title="StegResearch API", version="0.1.0")
+
+
+def _configure_cors(application: FastAPI) -> None:
+    settings = get_settings()
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost",
+            "http://localhost:5173",
+            "http://127.0.0.1",
+            "http://127.0.0.1:5173",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+_configure_cors(app)
 
 
 @app.on_event("startup")
@@ -81,23 +100,6 @@ def _bootstrap() -> None:
     registry.register_detector(WatermarkDetector())
 
 
-@app.on_event("startup")
-async def setup_cors() -> None:
-    settings = get_settings()
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://localhost",
-            "http://localhost:5173",
-            "http://127.0.0.1",
-            "http://127.0.0.1:5173",
-        ],
-        allow_credentials=True,
-    allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-
 @app.get("/health")
 async def health(settings: Settings = Depends(get_settings)) -> Dict[str, Any]:
     return {
@@ -117,11 +119,11 @@ def _write_temp_file(upload: UploadFile, settings: Settings) -> Path:
 
 @app.post("/embed")
 async def embed(
-    carrier: str,
-    method: str,
+    carrier: str = Form(...),
+    method: str = Form(...),
     payload: UploadFile = File(...),
     cover: UploadFile = File(...),
-    options: str = "{}",
+    options: str = Form("{}"),
     settings: Settings = Depends(get_settings),
 ) -> JSONResponse:
     if not settings.allow_external_networks and carrier == "network":
@@ -143,10 +145,10 @@ async def embed(
 
 @app.post("/extract")
 async def extract(
-    carrier: str,
-    method: str,
+    carrier: str = Form(...),
+    method: str = Form(...),
     stego: UploadFile = File(...),
-    options: str = "{}",
+    options: str = Form("{}"),
     settings: Settings = Depends(get_settings),
 ) -> JSONResponse:
     if not settings.allow_external_networks and carrier == "network":
@@ -168,9 +170,9 @@ async def extract(
 
 @app.post("/detect")
 async def detect(
-    carrier: str,
+    carrier: str = Form(...),
     stego: UploadFile = File(...),
-    options: str = "{}",
+    options: str = Form("{}"),
     settings: Settings = Depends(get_settings),
 ) -> JSONResponse:
     if not settings.allow_external_networks and carrier == "network":

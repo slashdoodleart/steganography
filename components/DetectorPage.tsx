@@ -27,6 +27,8 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isDarkTheme =
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark");
 
   const fileCategory = useMemo<"image" | "audio">(() => {
     if (!selectedFile) {
@@ -121,16 +123,13 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "high":
-        return "#303030";
-      case "medium":
-        return "#808080";
-      case "low":
-        return "#D0D0D0";
-      default:
-        return "#E0E0E0";
-    }
+    const palette = {
+      high: isDarkTheme ? "#F5F5F5" : "#161616",
+      medium: isDarkTheme ? "#C0C0C0" : "#505050",
+      low: isDarkTheme ? "#9A9A9A" : "#808080",
+      default: isDarkTheme ? "#7A7A7A" : "#A0A0A0",
+    } as const;
+    return (palette as Record<string, string>)[status] ?? palette.default;
   };
 
   return (
@@ -139,7 +138,7 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
     }}>
       <div className="container mx-auto max-w-4xl">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <Button variant="ghost" onClick={onBack} className="mb-6 hover:bg-black/5 text-black">
+          <Button variant="ghost" onClick={onBack} className="mb-6 hover:bg-muted">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
@@ -150,19 +149,19 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black/5 border-2 border-black/10 mb-4">
-            <Search className="w-8 h-8 text-black" strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted border-2 border-border mb-4">
+            <Search className="w-8 h-8" strokeWidth={1.5} />
           </div>
-          <h1 className="text-4xl mb-3 text-black">Detect Steganography</h1>
-          <p className="text-[#707070]">
+          <h1 className="text-4xl mb-3 text-foreground">Detect Steganography</h1>
+          <p className="text-muted-foreground">
             Analyze files for potential hidden messages
           </p>
         </motion.div>
 
-        <Card className="border-[#D0D0D0] bg-white shadow-lg p-8">
+        <Card className="border-border bg-card shadow-lg p-8">
           <div className="space-y-6">
             <div>
-              <label className="block mb-3 text-sm text-black">Upload File to Analyze</label>
+              <label className="block mb-3 text-sm text-foreground">Upload File to Analyze</label>
               <FileUpload
                 onFileSelect={handleFileSelect}
                 acceptedTypes="image/*,audio/*"
@@ -179,12 +178,12 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-3"
                 >
-                  <div className="flex items-center justify-between text-sm text-black">
+                  <div className="flex items-center justify-between text-sm text-foreground">
                     <span>Scanning for steganography...</span>
                     <span>{progress.toFixed(0)}%</span>
                   </div>
                   <Progress value={progress} className="h-2" />
-                  <div className="flex items-center justify-center gap-2 text-xs text-[#707070]">
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -205,39 +204,42 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
                   <div
                     className={`p-6 rounded-lg border ${
                       result.hasStego
-                        ? "bg-[#F5F5F5] border-[#303030]"
-                        : "bg-[#F9F9F9] border-[#D0D0D0]"
+                        ? "bg-muted border-border"
+                        : "bg-card border-border"
                     }`}
                   >
                     <div className="flex items-start gap-3 mb-4">
                       {result.hasStego ? (
-                        <AlertTriangle className="w-8 h-8 text-[#303030] flex-shrink-0" />
+                        <AlertTriangle className="w-8 h-8 text-foreground flex-shrink-0" />
                       ) : (
-                        <CheckCircle className="w-8 h-8 text-[#808080] flex-shrink-0" />
+                        <CheckCircle className="w-8 h-8 text-muted-foreground flex-shrink-0" />
                       )}
                       <div className="flex-1">
-                        <h3 className="text-xl mb-2 text-black">
+                        <h3 className="text-xl mb-2 text-foreground">
                           {result.hasStego
                             ? "Steganography Detected"
                             : "No Steganography Detected"}
                         </h3>
-                        <p className="text-sm text-[#707070] mb-4">
+                        <p className="text-sm text-muted-foreground mb-4">
                           {result.hasStego
                             ? "This file likely contains hidden data. Multiple indicators suggest steganographic content."
                             : "This file appears to be clean. No significant indicators of hidden content were found."}
                         </p>
 
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm text-black">
+                          <div className="flex items-center justify-between text-sm text-foreground">
                             <span>Detection Confidence</span>
                             <span>{result.probability.toFixed(1)}%</span>
                           </div>
-                          <div className="relative h-3 bg-[#E0E0E0] rounded-full overflow-hidden">
+                          <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${result.probability}%` }}
                               transition={{ duration: 1, ease: "easeOut" }}
-                              className="h-full rounded-full bg-gradient-to-r from-[#303030] to-black"
+                              className="h-full rounded-full"
+                              style={{
+                                background: "linear-gradient(90deg, var(--foreground) 0%, var(--accent) 100%)",
+                              }}
                             />
                           </div>
                         </div>
@@ -247,8 +249,8 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
 
                   <div>
                     <div className="flex items-center gap-2 mb-4">
-                      <Shield className="w-5 h-5 text-black" />
-                      <h4 className="text-black">Detection Indicators</h4>
+                      <Shield className="w-5 h-5 text-foreground" />
+                      <h4 className="text-foreground">Detection Indicators</h4>
                     </div>
                     <div className="space-y-3">
                       {result.indicators.map((indicator, index) => (
@@ -257,10 +259,10 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="p-4 rounded-lg bg-[#F5F5F5] border border-[#D0D0D0]"
+                          className="p-4 rounded-lg bg-card border border-border"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-black">{indicator.name}</span>
+                            <span className="text-sm text-foreground">{indicator.name}</span>
                             <span
                               className="text-xs px-2 py-1 rounded-full"
                               style={{
@@ -273,6 +275,7 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
                             </span>
                           </div>
                           <div className="relative h-2 bg-white rounded-full overflow-hidden border border-[#E0E0E0]">
+                            {/* Use inline styles so the bar respects the monochrome palette */}
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${indicator.value}%` }}
@@ -283,7 +286,7 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
                               }}
                             />
                           </div>
-                          <p className="text-xs text-[#707070] mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {indicator.value.toFixed(1)}% anomaly detected
                           </p>
                         </motion.div>
@@ -291,7 +294,7 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
                     </div>
                   </div>
 
-                  <Button onClick={handleReset} variant="outline" className="w-full border-[#D0D0D0] text-black hover:bg-black/5">
+                  <Button onClick={handleReset} variant="outline" className="w-full hover:bg-muted">
                     Scan Another File
                   </Button>
                 </motion.div>
@@ -303,7 +306,7 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
                 <Button
                   onClick={handleScan}
                   disabled={!selectedFile}
-                  className="w-full bg-black text-white hover:bg-[#303030] disabled:bg-[#D0D0D0] disabled:text-[#808080]"
+                  className="w-full disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <Search className="w-4 h-4 mr-2" />
                   Scan for Steganography
@@ -327,10 +330,10 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-6 p-4 rounded-lg bg-black/5 border border-black/10"
+          className="mt-6 p-4 rounded-lg bg-muted border border-border"
         >
-          <p className="text-sm text-[#707070]">
-            <span className="text-black">ℹ️ Note:</span> Detection algorithms analyze
+          <p className="text-sm text-muted-foreground">
+            <span className="text-foreground">ℹ️ Note:</span> Detection algorithms analyze
             statistical anomalies, LSB patterns, and entropy. No method is 100% accurate - some
             advanced techniques may evade detection.
           </p>
