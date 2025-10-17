@@ -25,3 +25,16 @@ coverage/
 
 # Misc
 *.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+
+# Research suite artifacts
+research_suite/artifacts/
+backend/artifacts/

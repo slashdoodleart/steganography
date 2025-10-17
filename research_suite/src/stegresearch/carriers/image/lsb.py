@@ -58,7 +58,7 @@ class ImageLSBEmbedder(Embedder):
             raise ValueError("Payload too large for cover image")
 
         for idx, bit in enumerate(data_bits):
-            flat[idx] = (flat[idx] & ~1) | bit
+            flat[idx] = np.uint8((flat[idx] & 0xFE) | bit)
 
         stego_array = flat.reshape(cover_array.shape)
         stego_image = Image.fromarray(stego_array.astype(np.uint8))
