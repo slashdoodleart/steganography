@@ -26,6 +26,8 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<DetectionResult | null>(null);
+  const isDarkTheme =
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark");
 
   const handleScan = async () => {
     if (!selectedFile) return;
@@ -91,27 +93,37 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
     setResult(null);
   };
 
-  const getConfidenceBg = (confidence: string) => {
-    switch (confidence) {
-      case "high":
-        return "bg-[#303030]";
-      case "medium":
-        return "bg-[#808080]";
-      case "low":
-        return "bg-[#D0D0D0]";
-      default:
-        return "bg-[#E0E0E0]";
-    }
+  const getConfidenceTokens = (confidence: string) => {
+    const palette = {
+      high: isDarkTheme
+        ? { bg: "rgba(245,245,245,0.15)", color: "#F5F5F5" }
+        : { bg: "rgba(22,22,22,0.12)", color: "#161616" },
+      medium: isDarkTheme
+        ? { bg: "rgba(192,192,192,0.18)", color: "#D0D0D0" }
+        : { bg: "rgba(128,128,128,0.18)", color: "#505050" },
+      low: isDarkTheme
+        ? { bg: "rgba(138,138,138,0.16)", color: "#A0A0A0" }
+        : { bg: "rgba(176,176,176,0.18)", color: "#707070" },
+      default: isDarkTheme
+        ? { bg: "rgba(122,122,122,0.18)", color: "#8A8A8A" }
+        : { bg: "rgba(160,160,160,0.18)", color: "#808080" },
+    } as const;
+    return (palette as Record<string, { bg: string; color: string }>)[confidence] ?? palette.default;
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6 bg-white">
+    <div
+      className="min-h-screen pt-24 pb-12 px-6"
+      style={{
+        background: "radial-gradient(circle at top right, var(--muted) 0%, var(--background) 55%)",
+      }}
+    >
       <div className="container mx-auto max-w-5xl">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <Button
             variant="ghost"
             onClick={onBack}
-            className="mb-6 hover:bg-black/5 text-black"
+            className="mb-6 hover:bg-muted"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
@@ -123,20 +135,20 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black/5 border-2 border-black/10 mb-4">
-            <Search className="w-8 h-8 text-black" strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted border-2 border-border mb-4">
+            <Search className="w-8 h-8" strokeWidth={1.5} />
           </div>
-          <h1 className="text-4xl text-black mb-3">Audio Steganography Detector</h1>
-          <p className="text-[#505050]">Analyze audio files for hidden messages</p>
+          <h1 className="text-4xl text-foreground mb-3">Audio Steganography Detector</h1>
+          <p className="text-muted-foreground">Analyze audio files for hidden messages</p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left Column - Upload & Scan */}
-          <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
+          <Card className="border-border bg-card shadow-lg p-6">
             <div className="space-y-6">
               <div>
-                <label className="block mb-3 text-sm text-black">Upload Audio File</label>
-                <div className="border-2 border-dashed border-[#B0B0B0] rounded-lg p-6 text-center hover:border-[#808080] transition-colors">
+                <label className="block mb-3 text-sm text-foreground">Upload Audio File</label>
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-foreground transition-colors">
                   {!selectedFile ? (
                     <div>
                       <input
@@ -147,13 +159,13 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
                         onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                       />
                       <label htmlFor="audio-detector" className="cursor-pointer">
-                        <Activity className="w-12 h-12 text-[#808080] mx-auto mb-3" strokeWidth={1.5} />
-                        <p className="text-black mb-2">Select Audio to Analyze</p>
-                        <p className="text-sm text-[#808080]">All audio formats supported</p>
+                        <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-3" strokeWidth={1.5} />
+                        <p className="text-foreground mb-2">Select Audio to Analyze</p>
+                        <p className="text-sm text-muted-foreground">All audio formats supported</p>
                         <Button
                           type="button"
                           variant="outline"
-                          className="mt-4 border-black text-black hover:bg-black/5"
+                          className="mt-4"
                           onClick={() => document.getElementById("audio-detector")?.click()}
                         >
                           Browse Files
@@ -163,12 +175,12 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
                   ) : (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded bg-black/5">
-                          <Music className="w-6 h-6 text-black" />
+                        <div className="p-2 rounded bg-muted">
+                          <Music className="w-6 h-6" />
                         </div>
                         <div className="text-left">
-                          <p className="text-black">{selectedFile.name}</p>
-                          <p className="text-sm text-[#808080]">
+                          <p className="text-foreground">{selectedFile.name}</p>
+                          <p className="text-sm text-muted-foreground">
                             {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -177,7 +189,7 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
                         variant="ghost"
                         size="sm"
                         onClick={handleReset}
-                        className="text-[#808080] hover:text-black hover:bg-black/5"
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted"
                       >
                         Change
                       </Button>
@@ -190,7 +202,7 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
                 <Button
                   onClick={handleScan}
                   disabled={!selectedFile}
-                  className="w-full bg-black text-white hover:bg-[#303030] disabled:bg-[#D0D0D0] disabled:text-[#808080]"
+                  className="w-full disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <Search className="w-4 h-4 mr-2" />
                   Scan for Steganography
@@ -200,8 +212,8 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
           </Card>
 
           {/* Right Column - Waveform */}
-          <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
-            <h3 className="text-black mb-4">Waveform Heatmap</h3>
+          <Card className="border-border bg-card shadow-lg p-6">
+            <h3 className="text-foreground mb-4">Waveform Heatmap</h3>
             <AudioWaveform
               audioFile={selectedFile}
               highlightRegions={result?.regions || []}
@@ -209,9 +221,9 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
               variant="light"
             />
             {result && result.regions.length > 0 && (
-              <div className="mt-4 p-3 bg-black/5 rounded-lg border border-[#E0E0E0]">
-                <p className="text-xs text-[#505050]">
-                  <span className="text-black">▮</span> Suspicious regions detected
+              <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-foreground">▮</span> Suspicious regions detected
                 </p>
               </div>
             )}
@@ -226,14 +238,14 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
               exit={{ opacity: 0, height: 0 }}
               className="mt-6"
             >
-              <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
+              <Card className="border-border bg-card shadow-lg p-6">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm text-black">
+                  <div className="flex items-center justify-between text-sm text-foreground">
                     <span>Scanning audio...</span>
                     <span>{progress.toFixed(0)}%</span>
                   </div>
-                  <Progress value={progress} className="h-2 bg-[#E0E0E0]" />
-                  <p className="text-xs text-[#808080] text-center">
+                  <Progress value={progress} className="h-2" />
+                  <p className="text-xs text-muted-foreground text-center">
                     Running multiple detection algorithms
                   </p>
                 </div>
@@ -251,39 +263,42 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
               <Card
                 className={`border-2 shadow-lg p-6 ${
                   result.hasSteganography
-                    ? "border-[#303030] bg-[#F5F5F5]"
-                    : "border-[#D0D0D0] bg-white"
+                    ? "border-border bg-muted"
+                    : "border-border bg-card"
                 }`}
               >
                 <div className="flex items-start gap-3 mb-4">
                   {result.hasSteganography ? (
-                    <AlertTriangle className="w-8 h-8 text-black flex-shrink-0" />
+                    <AlertTriangle className="w-8 h-8 text-foreground flex-shrink-0" />
                   ) : (
-                    <CheckCircle className="w-8 h-8 text-[#505050] flex-shrink-0" />
+                    <CheckCircle className="w-8 h-8 text-muted-foreground flex-shrink-0" />
                   )}
                   <div className="flex-1">
-                    <h3 className="text-xl text-black mb-2">
+                    <h3 className="text-xl text-foreground mb-2">
                       {result.hasSteganography
                         ? "Steganography Detected"
                         : "No Steganography Detected"}
                     </h3>
-                    <p className="text-sm text-[#505050] mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       {result.hasSteganography
                         ? "This audio file likely contains hidden data based on statistical analysis."
                         : "This audio file appears clean with no significant anomalies detected."}
                     </p>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-black">
+                      <div className="flex items-center justify-between text-sm text-foreground">
                         <span>Detection Confidence</span>
                         <span>{result.probability.toFixed(1)}%</span>
                       </div>
-                      <div className="relative h-3 bg-[#E0E0E0] rounded-full overflow-hidden">
+                      <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${result.probability}%` }}
                           transition={{ duration: 1, ease: "easeOut" }}
-                          className="h-full bg-gradient-to-r from-[#303030] to-black rounded-full"
+                          className="h-full rounded-full"
+                          style={{
+                            background: "linear-gradient(90deg, var(--foreground) 0%, var(--accent) 100%)",
+                          }}
                         />
                       </div>
                     </div>
@@ -292,8 +307,8 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
               </Card>
 
               {/* Algorithm Results */}
-              <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
-                <h4 className="text-black mb-4">Detection Algorithms</h4>
+              <Card className="border-border bg-card shadow-lg p-6">
+                <h4 className="text-foreground mb-4">Detection Algorithms</h4>
                 <div className="space-y-4">
                   {result.algorithms.map((algo, index) => (
                     <motion.div
@@ -301,27 +316,32 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="p-4 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0]"
+                      className="p-4 bg-muted rounded-lg border border-border"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-black">{algo.name}</span>
+                        <span className="text-sm text-foreground">{algo.name}</span>
                         <span
-                          className={`text-xs px-2 py-1 rounded ${getConfidenceBg(
-                            algo.confidence
-                          )} ${algo.confidence === "low" ? "text-[#505050]" : "text-white"}`}
+                          className="text-xs px-2 py-1 rounded"
+                          style={{
+                            backgroundColor: getConfidenceTokens(algo.confidence).bg,
+                            color: getConfidenceTokens(algo.confidence).color,
+                          }}
                         >
                           {algo.confidence.toUpperCase()}
                         </span>
                       </div>
-                      <div className="relative h-2 bg-white rounded-full overflow-hidden border border-[#E0E0E0]">
+                      <div className="relative h-2 bg-card rounded-full overflow-hidden border border-border">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${algo.score}%` }}
                           transition={{ duration: 0.8, delay: index * 0.1 }}
-                          className="h-full bg-black rounded-full"
+                          className="h-full rounded-full"
+                          style={{
+                            backgroundColor: getConfidenceTokens(algo.confidence).color,
+                          }}
                         />
                       </div>
-                      <p className="text-xs text-[#808080] mt-1">{algo.score.toFixed(1)}% score</p>
+                      <p className="text-xs text-muted-foreground mt-1">{algo.score.toFixed(1)}% score</p>
                     </motion.div>
                   ))}
                 </div>
@@ -330,7 +350,7 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
               <Button
                 onClick={handleReset}
                 variant="outline"
-                className="w-full border-[#D0D0D0] text-black hover:bg-black/5"
+                className="w-full hover:bg-muted"
               >
                 Scan Another File
               </Button>
@@ -342,10 +362,10 @@ export function AudioDetector({ onBack }: AudioDetectorProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-6 p-4 rounded-lg bg-black/5 border border-[#E0E0E0]"
+          className="mt-6 p-4 rounded-lg bg-muted border border-border"
         >
-          <p className="text-sm text-[#505050]">
-            <span className="text-black">ℹ️ Analysis:</span> Uses multiple statistical methods
+          <p className="text-sm text-muted-foreground">
+            <span className="text-foreground">ℹ️ Analysis:</span> Uses multiple statistical methods
             including LSB analysis, chi-square testing, and spectral analysis to detect hidden data
             in audio files.
           </p>

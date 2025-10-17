@@ -89,13 +89,18 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6 bg-white">
+    <div
+      className="min-h-screen pt-24 pb-12 px-6"
+      style={{
+        background: "radial-gradient(circle at bottom left, var(--muted) 0%, var(--background) 55%)",
+      }}
+    >
       <div className="container mx-auto max-w-5xl">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <Button
             variant="ghost"
             onClick={onBack}
-            className="mb-6 hover:bg-black/5 text-black"
+            className="mb-6 hover:bg-muted"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
@@ -107,20 +112,20 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black/5 border-2 border-black/10 mb-4">
-            <Unlock className="w-8 h-8 text-black" strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted border-2 border-border mb-4">
+            <Unlock className="w-8 h-8" strokeWidth={1.5} />
           </div>
-          <h1 className="text-4xl text-black mb-3">Retrieve Hidden Message</h1>
-          <p className="text-[#505050]">Extract secret messages from audio files</p>
+          <h1 className="text-4xl text-foreground mb-3">Retrieve Hidden Message</h1>
+          <p className="text-muted-foreground">Extract secret messages from audio files</p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left Column - Upload */}
-          <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
+          <Card className="border-border bg-card shadow-lg p-6">
             <div className="space-y-6">
               <div>
-                <label className="block mb-3 text-sm text-black">Upload Audio File</label>
-                <div className="border-2 border-dashed border-[#B0B0B0] rounded-lg p-6 text-center hover:border-[#808080] transition-colors">
+                <label className="block mb-3 text-sm text-foreground">Upload Audio File</label>
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-foreground transition-colors">
                   {!selectedFile ? (
                     <div>
                       <input
@@ -131,13 +136,13 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                         onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                       />
                       <label htmlFor="audio-retrieve" className="cursor-pointer">
-                        <Unlock className="w-12 h-12 text-[#808080] mx-auto mb-3" strokeWidth={1.5} />
-                        <p className="text-black mb-2">Select Audio File</p>
-                        <p className="text-sm text-[#808080]">Any audio format supported</p>
+                        <Unlock className="w-12 h-12 text-muted-foreground mx-auto mb-3" strokeWidth={1.5} />
+                        <p className="text-foreground mb-2">Select Audio File</p>
+                        <p className="text-sm text-muted-foreground">Any audio format supported</p>
                         <Button
                           type="button"
                           variant="outline"
-                          className="mt-4 border-black text-black hover:bg-black/5"
+                          className="mt-4"
                           onClick={() => document.getElementById("audio-retrieve")?.click()}
                         >
                           Browse Files
@@ -147,12 +152,12 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                   ) : (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded bg-black/5">
-                          <Music className="w-6 h-6 text-black" />
+                        <div className="p-2 rounded bg-muted">
+                          <Music className="w-6 h-6" />
                         </div>
                         <div className="text-left">
-                          <p className="text-black">{selectedFile.name}</p>
-                          <p className="text-sm text-[#808080]">
+                          <p className="text-foreground">{selectedFile.name}</p>
+                          <p className="text-sm text-muted-foreground">
                             {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -161,7 +166,7 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                         variant="ghost"
                         size="sm"
                         onClick={handleReset}
-                        className="text-[#808080] hover:text-black hover:bg-black/5"
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted"
                       >
                         Change
                       </Button>
@@ -174,7 +179,7 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                 <Button
                   onClick={handleExtract}
                   disabled={!selectedFile}
-                  className="w-full bg-black text-white hover:bg-[#303030] disabled:bg-[#D0D0D0] disabled:text-[#808080]"
+                  className="w-full disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <Unlock className="w-4 h-4 mr-2" />
                   Extract Message
@@ -185,8 +190,8 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
 
           {/* Right Column - Waveform & Results */}
           <div className="space-y-6">
-            <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
-              <h3 className="text-black mb-4">Audio Analysis</h3>
+            <Card className="border-border bg-card shadow-lg p-6">
+              <h3 className="text-foreground mb-4">Audio Analysis</h3>
               <AudioWaveform
                 audioFile={selectedFile}
                 highlightRegions={highlightRegions}
@@ -194,9 +199,9 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                 variant="light"
               />
               {highlightRegions.length > 0 && (
-                <div className="mt-4 p-3 bg-black/5 rounded-lg border border-[#E0E0E0]">
-                  <p className="text-xs text-[#505050]">
-                    <span className="text-black">■</span> Detected steganography regions
+                <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-foreground">■</span> Detected steganography regions
                   </p>
                 </div>
               )}
@@ -209,14 +214,14 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
+                  <Card className="border-border bg-card shadow-lg p-6">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between text-sm text-black">
+                      <div className="flex items-center justify-between text-sm text-foreground">
                         <span>Extracting message...</span>
                         <span>{progress}%</span>
                       </div>
-                      <Progress value={progress} className="h-2 bg-[#E0E0E0]" />
-                      <p className="text-xs text-[#808080] text-center">
+                      <Progress value={progress} className="h-2" />
+                      <p className="text-xs text-muted-foreground text-center">
                         Analyzing audio for hidden data
                       </p>
                     </div>
@@ -229,17 +234,17 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <Card className="border-[#303030] bg-white shadow-lg p-6">
+                  <Card className="border-border bg-muted shadow-lg p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <CheckCircle2 className="w-6 h-6 text-black" />
+                      <CheckCircle2 className="w-6 h-6 text-foreground" />
                       <div>
-                        <h4 className="text-black">Message Found</h4>
-                        <p className="text-sm text-[#505050]">Successfully extracted</p>
+                        <h4 className="text-foreground">Message Found</h4>
+                        <p className="text-sm text-muted-foreground">Successfully extracted</p>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0] mb-4">
-                      <p className="text-black whitespace-pre-wrap leading-relaxed">
+                    <div className="p-4 bg-card rounded-lg border border-border mb-4">
+                      <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                         {extractedMessage}
                       </p>
                     </div>
@@ -247,7 +252,7 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                     <div className="flex gap-3">
                       <Button
                         onClick={handleCopy}
-                        className="flex-1 bg-black text-white hover:bg-[#303030]"
+                        className="flex-1"
                       >
                         <Copy className="w-4 h-4 mr-2" />
                         Copy Message
@@ -255,7 +260,7 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                       <Button
                         onClick={handleReset}
                         variant="outline"
-                        className="flex-1 border-[#D0D0D0] text-black hover:bg-black/5"
+                        className="flex-1 hover:bg-muted"
                       >
                         Extract Another
                       </Button>
@@ -269,12 +274,12 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
+                  <Card className="border-border bg-card shadow-lg p-6">
                     <div className="flex items-start gap-3 mb-4">
-                      <AlertCircle className="w-6 h-6 text-[#505050] flex-shrink-0" />
+                      <AlertCircle className="w-6 h-6 text-muted-foreground flex-shrink-0" />
                       <div>
-                        <h4 className="text-black">No Message Detected</h4>
-                        <p className="text-sm text-[#505050] mt-1">
+                        <h4 className="text-foreground">No Message Detected</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
                           This audio file doesn't appear to contain any hidden steganography data.
                         </p>
                       </div>
@@ -282,7 +287,7 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                     <Button
                       onClick={handleReset}
                       variant="outline"
-                      className="w-full border-[#D0D0D0] text-black hover:bg-black/5"
+                      className="w-full hover:bg-muted"
                     >
                       Try Another File
                     </Button>
@@ -307,10 +312,10 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-6 p-4 rounded-lg bg-black/5 border border-[#E0E0E0]"
+          className="mt-6 p-4 rounded-lg bg-muted border border-border"
         >
-          <p className="text-sm text-[#505050]">
-            <span className="text-black">ℹ️ Detection method:</span> Uses LSB analysis and
+          <p className="text-sm text-muted-foreground">
+            <span className="text-foreground">ℹ️ Detection method:</span> Uses LSB analysis and
             statistical anomaly detection to locate and extract hidden messages from audio files.
           </p>
         </motion.div>

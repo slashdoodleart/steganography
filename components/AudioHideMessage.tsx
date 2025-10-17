@@ -122,13 +122,18 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6 bg-white">
+    <div
+      className="min-h-screen pt-24 pb-12 px-6"
+      style={{
+        background: "radial-gradient(circle at top left, var(--muted) 0%, var(--background) 55%)",
+      }}
+    >
       <div className="container mx-auto max-w-5xl">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <Button
             variant="ghost"
             onClick={onBack}
-            className="mb-6 hover:bg-black/5 text-black"
+            className="mb-6 hover:bg-muted"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
@@ -140,22 +145,22 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black/5 border-2 border-black/10 mb-4">
-            <Music className="w-8 h-8 text-black" strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted border-2 border-border mb-4">
+            <Music className="w-8 h-8" strokeWidth={1.5} />
           </div>
-          <h1 className="text-4xl text-black mb-3">Hide Message in Audio</h1>
-          <p className="text-[#505050]">
+          <h1 className="text-4xl text-foreground mb-3">Hide Message in Audio</h1>
+          <p className="text-muted-foreground">
             Embed your secret message into audio file with precision
           </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left Column - Upload & Input */}
-          <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
+          <Card className="border-border bg-card shadow-lg p-6">
             <div className="space-y-6">
               <div>
-                <label className="block mb-3 text-sm text-black">Audio File</label>
-                <div className="border-2 border-dashed border-[#B0B0B0] rounded-lg p-6 text-center hover:border-[#808080] transition-colors">
+                <label className="block mb-3 text-sm text-foreground">Audio File</label>
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-foreground transition-colors">
                   {!selectedFile ? (
                     <div>
                       <input
@@ -166,13 +171,13 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                         onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                       />
                       <label htmlFor="audio-upload" className="cursor-pointer">
-                        <Music className="w-12 h-12 text-[#808080] mx-auto mb-3" strokeWidth={1.5} />
-                        <p className="text-black mb-2">Upload Audio File</p>
-                        <p className="text-sm text-[#808080]">WAV, MP3, or other formats</p>
+                        <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3" strokeWidth={1.5} />
+                        <p className="text-foreground mb-2">Upload Audio File</p>
+                        <p className="text-sm text-muted-foreground">WAV, MP3, or other formats</p>
                         <Button
                           type="button"
                           variant="outline"
-                          className="mt-4 border-black text-black hover:bg-black/5"
+                          className="mt-4"
                           onClick={() => document.getElementById("audio-upload")?.click()}
                         >
                           Choose File
@@ -182,12 +187,12 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                   ) : (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded bg-black/5">
-                          <Music className="w-6 h-6 text-black" />
+                        <div className="p-2 rounded bg-muted">
+                          <Music className="w-6 h-6" />
                         </div>
                         <div className="text-left">
-                          <p className="text-black">{selectedFile.name}</p>
-                          <p className="text-sm text-[#808080]">
+                          <p className="text-foreground">{selectedFile.name}</p>
+                          <p className="text-sm text-muted-foreground">
                             {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
@@ -196,7 +201,7 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                         variant="ghost"
                         size="sm"
                         onClick={handleReset}
-                        className="text-[#808080] hover:text-black hover:bg-black/5"
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted"
                       >
                         Change
                       </Button>
@@ -206,22 +211,22 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
               </div>
 
               <div>
-                <label className="block mb-3 text-sm text-black">Secret Message</label>
+                <label className="block mb-3 text-sm text-foreground">Secret Message</label>
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter your secret message here..."
-                  className="min-h-32 bg-white border-[#D0D0D0] text-black placeholder:text-[#B0B0B0] focus:border-black resize-none"
+                  className="min-h-32 bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                   disabled={isProcessing || isComplete}
                 />
-                <p className="text-xs text-[#808080] mt-2">{message.length} characters</p>
+                <p className="text-xs text-muted-foreground mt-2">{message.length} characters</p>
               </div>
 
               {!isProcessing && !isComplete && (
                 <Button
                   onClick={handleProcess}
                   disabled={!selectedFile || !message || isProcessing}
-                  className="w-full bg-black text-white hover:bg-[#303030] disabled:bg-[#D0D0D0] disabled:text-[#808080]"
+                  className="w-full disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <Lock className="w-4 h-4 mr-2" />
                   Embed Message
@@ -232,8 +237,8 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
 
           {/* Right Column - Waveform & Status */}
           <div className="space-y-6">
-            <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
-              <h3 className="text-black mb-4">Audio Waveform</h3>
+            <Card className="border-border bg-card shadow-lg p-6">
+              <h3 className="text-foreground mb-4">Audio Waveform</h3>
               <AudioWaveform
                 audioFile={selectedFile}
                 highlightRegions={highlightRegions}
@@ -242,9 +247,9 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                 variant="light"
               />
               {highlightRegions.length > 0 && (
-                <div className="mt-4 p-3 bg-black/5 rounded-lg border border-[#E0E0E0]">
-                  <p className="text-xs text-[#505050]">
-                    <span className="text-black">■</span> Highlighted regions show where data is
+                <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-foreground">■</span> Highlighted regions show where data is
                     embedded
                   </p>
                 </div>
@@ -258,14 +263,14 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <Card className="border-[#D0D0D0] bg-white shadow-lg p-6">
+                  <Card className="border-border bg-card shadow-lg p-6">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between text-sm text-black">
+                      <div className="flex items-center justify-between text-sm text-foreground">
                         <span>Processing Audio...</span>
                         <span>{progress}%</span>
                       </div>
-                      <Progress value={progress} className="h-2 bg-[#E0E0E0]" />
-                      <p className="text-xs text-[#808080] text-center">
+                      <Progress value={progress} className="h-2" />
+                      <p className="text-xs text-muted-foreground text-center">
                         Converting to WAV and embedding message
                       </p>
                     </div>
@@ -278,12 +283,12 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <Card className="border-[#303030] bg-[#F5F5F5] shadow-lg p-6">
+                  <Card className="border-border bg-muted shadow-lg p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <CheckCircle2 className="w-6 h-6 text-black" />
+                      <CheckCircle2 className="w-6 h-6 text-foreground" />
                       <div>
-                        <h4 className="text-black">Success!</h4>
-                        <p className="text-sm text-[#505050]">
+                        <h4 className="text-foreground">Success!</h4>
+                        <p className="text-sm text-muted-foreground">
                           Message embedded successfully
                         </p>
                       </div>
@@ -291,7 +296,7 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                     <div className="flex gap-3">
                       <Button
                         onClick={handleDownload}
-                        className="flex-1 bg-black text-white hover:bg-[#303030]"
+                        className="flex-1"
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Download Audio
@@ -299,7 +304,7 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                       <Button
                         onClick={handleReset}
                         variant="outline"
-                        className="flex-1 border-[#D0D0D0] text-black hover:bg-black/5"
+                        className="flex-1 hover:bg-muted"
                       >
                         Embed Another
                       </Button>
@@ -325,10 +330,10 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-6 p-4 rounded-lg bg-black/5 border border-[#E0E0E0]"
+          className="mt-6 p-4 rounded-lg bg-muted border border-border"
         >
-          <p className="text-sm text-[#505050]">
-            <span className="text-black">ℹ️ Auto-conversion:</span> Files are automatically
+          <p className="text-sm text-muted-foreground">
+            <span className="text-foreground">ℹ️ Auto-conversion:</span> Files are automatically
             converted to WAV format for optimal steganography. The message is distributed across
             multiple regions for security.
           </p>

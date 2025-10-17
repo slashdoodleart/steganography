@@ -90,10 +90,15 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
     "Audio steganography uses sophisticated algorithms to embed data in the least significant bits of audio samples, making changes imperceptible to human hearing while maintaining file integrity.";
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6 bg-white">
+    <div
+      className="min-h-screen pt-24 pb-12 px-6"
+      style={{
+        background: "radial-gradient(circle at top right, var(--muted) 0%, var(--background) 60%)",
+      }}
+    >
       <div className="container mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <Button variant="ghost" onClick={onBack} className="mb-6 hover:bg-black/5 text-black">
+          <Button variant="ghost" onClick={onBack} className="mb-6 hover:bg-muted">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
@@ -111,8 +116,8 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="inline-block mb-6"
           >
-            <div className="relative p-4 rounded-2xl bg-black/5 border-2 border-black/10">
-              <AudioLines className="w-16 h-16 text-black" strokeWidth={1.5} />
+            <div className="relative p-4 rounded-2xl bg-muted border-2 border-border">
+              <AudioLines className="w-16 h-16" strokeWidth={1.5} />
             </div>
           </motion.div>
 
@@ -120,7 +125,7 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-5xl md:text-6xl mb-6 text-black"
+            className="text-5xl md:text-6xl mb-6 text-foreground"
           >
             {heroTitle}
           </motion.h1>
@@ -129,7 +134,7 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-lg text-[#505050] mb-8 max-w-2xl mx-auto"
+            className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto"
           >
             {heroSubtitle}
           </motion.p>
@@ -143,10 +148,10 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
             {featurePills.map((feature) => (
               <div
                 key={feature.title}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 border border-black/10"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border"
               >
-                <AudioLines className="w-4 h-4 text-black" />
-                <span className="text-sm text-black">{feature.title}</span>
+                <AudioLines className="w-4 h-4" />
+                <span className="text-sm text-foreground">{feature.title}</span>
               </div>
             ))}
           </motion.div>
@@ -163,7 +168,7 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
                 transition={{ delay: 0.2 * index, duration: 0.5 }}
               >
                 <Card
-                  className="border-[#D0D0D0] bg-white hover:bg-[#F5F5F5] shadow-lg transition-all duration-300 group cursor-pointer h-full"
+                  className="border-border bg-card hover:bg-muted shadow-lg transition-all duration-300 group cursor-pointer h-full"
                   onClick={() => onNavigate(action.key)}
                 >
                   <div className="p-8">
@@ -172,16 +177,16 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
                       transition={{ type: "spring", stiffness: 300 }}
                       className="mb-6"
                     >
-                      <div className="w-16 h-16 rounded-xl bg-black/5 border-2 border-black/10 flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                        <Icon className="w-8 h-8 text-black" strokeWidth={1.5} />
+                      <div className="w-16 h-16 rounded-xl bg-muted border-2 border-border flex items-center justify-center group-hover:bg-muted transition-colors">
+                        <Icon className="w-8 h-8" strokeWidth={1.5} />
                       </div>
                     </motion.div>
 
-                    <h3 className="text-xl text-black mb-3">{action.title}</h3>
-                    <p className="text-[#505050] mb-6">{action.description}</p>
+                    <h3 className="text-xl text-foreground mb-3">{action.title}</h3>
+                    <p className="text-muted-foreground mb-6">{action.description}</p>
 
                     <Button
-                      className="w-full bg-black text-white hover:bg-[#303030] group-hover:shadow-md transition-shadow"
+                      className="w-full group-hover:shadow-md transition-shadow"
                       onClick={(e) => {
                         e.stopPropagation();
                         onNavigate(action.key);
@@ -202,8 +207,8 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
           transition={{ delay: 1 }}
           className="mt-16 text-center"
         >
-          <div className="inline-block p-6 rounded-2xl bg-black/5 border border-black/10">
-            <p className="text-sm text-[#505050] max-w-2xl">{heroNarrative}</p>
+          <div className="inline-block p-6 rounded-2xl bg-muted border border-border">
+            <p className="text-sm text-muted-foreground max-w-2xl">{heroNarrative}</p>
           </div>
         </motion.div>
 
@@ -211,7 +216,7 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-6 text-center text-sm text-[#808080]"
+            className="mt-6 text-center text-sm text-muted-foreground"
           >
             Loading audio suite data…
           </motion.div>

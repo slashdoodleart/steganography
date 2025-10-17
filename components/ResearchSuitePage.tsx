@@ -742,37 +742,52 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
     }}>
       <div className="container mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <Button variant="ghost" onClick={onBack} className="mb-6 hover:bg-black/5 text-black">
+          <Button variant="ghost" onClick={onBack} className="mb-6 hover:bg-muted">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black/5 border-2 border-black/10 mb-4">
-            <Beaker className="w-8 h-8 text-black" strokeWidth={1.5} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted border-2 border-border mb-4">
+            <Beaker className="w-8 h-8" strokeWidth={1.5} />
           </div>
-          <h1 className="text-4xl text-black mb-3">Research Suite Console</h1>
-          <p className="text-[#505050] max-w-2xl mx-auto">
+          <h1 className="text-4xl text-foreground mb-3">Research Suite Console</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Explore every carrier we just added to the backend suite. Combine embed, extract, and detection workflows in one advanced panel with direct access to generated artifacts and metrics.
           </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <Card className="border-[#D0D0D0] bg-white shadow-lg p-6 space-y-6">
+          <Card className="border-border bg-card shadow-lg p-6 space-y-6">
             <Tabs value={operation} onValueChange={(value) => setOperation(value as Operation)}>
-              <TabsList className="grid grid-cols-3 bg-[#F5F5F5]">
-                <TabsTrigger value="embed">Embed</TabsTrigger>
-                <TabsTrigger value="extract">Extract</TabsTrigger>
-                <TabsTrigger value="detect">Detect</TabsTrigger>
+              <TabsList className="grid grid-cols-3 bg-muted">
+                <TabsTrigger
+                  value="embed"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Embed
+                </TabsTrigger>
+                <TabsTrigger
+                  value="extract"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Extract
+                </TabsTrigger>
+                <TabsTrigger
+                  value="detect"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Detect
+                </TabsTrigger>
               </TabsList>
             </Tabs>
 
             <div className="grid gap-4">
               <div>
-                <label className="text-sm text-black block mb-2">Carrier</label>
+                <label className="text-sm text-foreground block mb-2">Carrier</label>
                 <Select value={carrier} onValueChange={(value) => setCarrier(value as CarrierKey)}>
-                  <SelectTrigger className="bg-[#F5F5F5] border-[#D0D0D0] text-black">
+                  <SelectTrigger className="bg-muted border border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -783,14 +798,14 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="mt-2 text-xs text-[#808080]">{config.summary}</p>
+                <p className="mt-2 text-xs text-muted-foreground">{config.summary}</p>
               </div>
 
               {operation !== "detect" && methodCatalog.length > 0 && (
                 <div>
-                  <label className="text-sm text-black block mb-2">Method</label>
+                  <label className="text-sm text-foreground block mb-2">Method</label>
                   <Select value={method} onValueChange={setMethod}>
-                    <SelectTrigger className="bg-[#F5F5F5] border-[#D0D0D0] text-black">
+                    <SelectTrigger className="bg-muted border border-border text-foreground">
                       <SelectValue placeholder="Select method" />
                     </SelectTrigger>
                     <SelectContent>
@@ -802,10 +817,10 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
                     </SelectContent>
                   </Select>
                   {selectedMethod && (
-                    <div className="mt-2 text-xs text-[#606060]">
+                    <div className="mt-2 text-xs text-muted-foreground">
                       <p>{selectedMethod.description}</p>
                       {selectedMethod.recommendation && (
-                        <p className="mt-1 text-[#808080]">{selectedMethod.recommendation}</p>
+                        <p className="mt-1 text-muted-foreground/80">{selectedMethod.recommendation}</p>
                       )}
                     </div>
                   )}
@@ -815,7 +830,7 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
               {operation === "embed" && (
                 <div className="grid gap-4">
                   <div>
-                    <label className="text-sm text-black block mb-2">Cover File</label>
+                    <label className="text-sm text-foreground block mb-2">Cover File</label>
                     <FileUpload
                       onFileSelect={setCoverFile}
                       acceptedTypes={config.coverAccept}
@@ -834,18 +849,29 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
                         }
                       }}
                     >
-                      <TabsList className="grid grid-cols-2 bg-[#F5F5F5]">
-                        <TabsTrigger value="text">Text Payload</TabsTrigger>
-                        <TabsTrigger value="file" disabled={carrier === "text"}>Binary Payload</TabsTrigger>
+                      <TabsList className="grid grid-cols-2 bg-muted">
+                        <TabsTrigger
+                          value="text"
+                          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                        >
+                          Text Payload
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="file"
+                          disabled={carrier === "text"}
+                          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                        >
+                          Binary Payload
+                        </TabsTrigger>
                       </TabsList>
                       <TabsContent value="text" className="mt-4 space-y-2">
                         <Textarea
                           value={message}
                           onChange={(event) => setMessage(event.target.value)}
                           placeholder="Type the secret payload here"
-                          className="bg-[#F5F5F5] border-[#D0D0D0] text-black min-h-[120px]"
+                          className="bg-muted border border-border text-foreground min-h-[120px]"
                         />
-                        <p className="text-xs text-[#808080]">{message.length} characters</p>
+                        <p className="text-xs text-muted-foreground">{message.length} characters</p>
                       </TabsContent>
                       <TabsContent value="file" className="mt-4">
                         <FileUpload
@@ -854,7 +880,7 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
                           label="Upload payload file"
                           icon="file"
                         />
-                        <p className="text-xs text-[#808080] mt-2">
+                        <p className="text-xs text-muted-foreground mt-2">
                           Payload file will be streamed as-is; ensure it fits the carrier capacity.
                         </p>
                       </TabsContent>
@@ -865,7 +891,9 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
 
               {operation !== "embed" && (
                 <div>
-                  <label className="text-sm text-black block mb-2">{operation === "extract" ? "Stego File" : "Artifact"}</label>
+                  <label className="text-sm text-foreground block mb-2">
+                    {operation === "extract" ? "Stego File" : "Artifact"}
+                  </label>
                   <FileUpload
                     onFileSelect={setStegoFile}
                     acceptedTypes={config.coverAccept}
@@ -876,13 +904,15 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
               )}
 
               <div>
-                <label className="text-sm text-black block mb-2">Advanced Options (JSON)</label>
+                <label className="text-sm text-foreground block mb-2">Advanced Options (JSON)</label>
                 <Textarea
                   value={optionsText}
                   onChange={(event) => setOptionsText(event.target.value)}
-                  className="bg-[#F5F5F5] border-[#D0D0D0] text-black font-mono text-xs min-h-[120px]"
+                  className="bg-muted border border-border text-foreground font-mono text-xs min-h-[120px]"
                 />
-                <p className="text-xs text-[#808080] mt-1">Leave blank for defaults. Options map directly to backend kwargs.</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Leave blank for defaults. Options map directly to backend kwargs.
+                </p>
               </div>
             </div>
 
@@ -890,7 +920,7 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
               <Button
                 onClick={runOperation}
                 disabled={isProcessing}
-                className="w-full bg-black text-white hover:bg-[#303030] disabled:bg-[#D0D0D0] disabled:text-[#808080]"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
               >
                 {isProcessing ? "Running..." : "Run Operation"}
               </Button>
@@ -902,7 +932,7 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
                     exit={{ opacity: 0, height: 0 }}
                     className="space-y-2"
                   >
-                    <div className="flex items-center justify-between text-sm text-black">
+                    <div className="flex items-center justify-between text-sm text-foreground">
                       <span>Processing...</span>
                       <span>{progress}%</span>
                     </div>
@@ -914,7 +944,7 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-700"
+                  className="p-3 rounded-md bg-destructive/10 border border-destructive/30 text-sm text-destructive"
                 >
                   {errorMessage}
                 </motion.div>
@@ -922,25 +952,25 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
             </div>
           </Card>
 
-          <Card className="border-[#D0D0D0] bg-white shadow-lg p-6 space-y-6">
+          <Card className="border-border shadow-lg p-6 space-y-6">
             {renderResult()}
 
             {download && downloadUrl && (
-              <div className="rounded-lg border border-[#D0D0D0] bg-[#F5F5F5] p-4 flex flex-col gap-3">
+              <div className="rounded-lg border border-border bg-muted/50 p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold">{download.filename}</p>
-                    <p className="text-xs text-[#707070]">
+                    <p className="text-sm font-semibold text-foreground">{download.filename}</p>
+                    <p className="text-xs text-muted-foreground">
                       {download.contentType ?? "application/octet-stream"} · {(download.blob.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
-                  <Button onClick={handleDownload} className="bg-black text-white hover:bg-[#303030]">
+                  <Button onClick={handleDownload} className="bg-primary text-primary-foreground hover:bg-primary/90">
                     <Download className="w-4 h-4 mr-2" />
                     Download Artifact
                   </Button>
                 </div>
                 {previewText && (
-                  <div className="rounded-md border border-[#D0D0D0] bg-white p-3 text-xs max-h-40 overflow-auto whitespace-pre-wrap">
+                  <div className="rounded-md border border-border bg-card p-3 text-xs text-muted-foreground max-h-40 overflow-auto whitespace-pre-wrap">
                     {previewText}
                   </div>
                 )}
@@ -950,12 +980,12 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
         </div>
 
         <div className="mt-8 grid lg:grid-cols-3 gap-4">
-          <Card className="p-5 border-[#D0D0D0] bg-white shadow-md">
+          <Card className="p-5 border-border shadow-md">
             <div className="flex items-center gap-3 mb-3">
               <FlaskConical className="w-5 h-5" />
-              <span className="font-semibold">Carrier Coverage</span>
+              <span className="font-semibold text-foreground">Carrier Coverage</span>
             </div>
-            <ul className="space-y-2 text-sm text-[#505050]">
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Image (RGB & DCT)</li>
               <li className="flex items-center gap-2"><Music className="w-4 h-4" /> Audio (PCM & Echo)</li>
               <li className="flex items-center gap-2"><Video className="w-4 h-4" /> Video (Frame LSB & Haar DWT)</li>
@@ -964,21 +994,21 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
               <li className="flex items-center gap-2"><HardDrive className="w-4 h-4" /> Filesystem (ADS & Slack)</li>
             </ul>
           </Card>
-          <Card className="p-5 border-[#D0D0D0] bg-white shadow-md">
+          <Card className="p-5 border-border shadow-md">
             <div className="flex items-center gap-3 mb-3">
               <FileText className="w-5 h-5" />
-              <span className="font-semibold">Detector Hints</span>
+              <span className="font-semibold text-foreground">Detector Hints</span>
             </div>
-            <p className="text-sm text-[#505050]">
+            <p className="text-sm text-muted-foreground">
               Each detect run executes every registered detector for the selected carrier. Review probability scores alongside supporting statistics to form a decision – high probabilities with supporting metrics usually indicate tampering.
             </p>
           </Card>
-          <Card className="p-5 border-[#D0D0D0] bg-white shadow-md">
+          <Card className="p-5 border-border shadow-md">
             <div className="flex items-center gap-3 mb-3">
               <ShieldCheck className="w-5 h-5" />
-              <span className="font-semibold">Safety Notes</span>
+              <span className="font-semibold text-foreground">Safety Notes</span>
             </div>
-            <p className="text-sm text-[#505050]">
+            <p className="text-sm text-muted-foreground">
               Network carriers never transmit packets; operations stay within the artifact sandbox. Filesystem carriers clone inputs before writing hidden data, leaving originals untouched.
             </p>
           </Card>
