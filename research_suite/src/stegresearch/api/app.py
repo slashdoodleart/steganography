@@ -7,7 +7,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,6 +26,25 @@ from ..watermark import WatermarkEmbedder, WatermarkExtractor, WatermarkDetector
 configure_logging()
 
 app = FastAPI(title="StegResearch API", version="0.1.0")
+
+
+def _configure_cors(application: FastAPI) -> None:
+    settings = get_settings()
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost",
+            "http://localhost:5173",
+            "http://127.0.0.1",
+            "http://127.0.0.1:5173",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+_configure_cors(app)
 
 
 @app.on_event("startup")
@@ -79,25 +98,6 @@ def _bootstrap() -> None:
     registry.register_embedder(WatermarkEmbedder())
     registry.register_extractor(WatermarkExtractor())
     registry.register_detector(WatermarkDetector())
-
-
-@app.on_event("startup")
-async def setup_cors() -> None:
-    settings = get_settings()
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://localhost",
-            "http://localhost:5173",
-            "http://127.0.0.1",
-            "http://127.0.0.1:5173",
-        ],
-        allow_credentials=True,
-    allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-
 @app.get("/health")
 async def health(settings: Settings = Depends(get_settings)) -> Dict[str, Any]:
     return {
@@ -108,20 +108,20 @@ async def health(settings: Settings = Depends(get_settings)) -> Dict[str, Any]:
 
 
 def _write_temp_file(upload: UploadFile, settings: Settings) -> Path:
-    temp_dir = settings.artifact_dir / "uploads"
+    temp_dir = (settings.artifact_dir / "uploads").resolve()
     temp_dir.mkdir(parents=True, exist_ok=True)
-    temp_path = temp_dir / f"{uuid.uuid4()}_{upload.filename}"
+    temp_path = (temp_dir / f"{uuid.uuid4()}_{upload.filename}").resolve()
     temp_path.write_bytes(upload.file.read())
     return temp_path
 
 
 @app.post("/embed")
 async def embed(
-    carrier: str,
-    method: str,
+    carrier: str = Form(...),
+    method: str = Form(...),
     payload: UploadFile = File(...),
     cover: UploadFile = File(...),
-    options: str = "{}",
+    options: str = Form("{}"),
     settings: Settings = Depends(get_settings),
 ) -> JSONResponse:
     if not settings.allow_external_networks and carrier == "network":
@@ -129,13 +129,18 @@ async def embed(
     opts = json.loads(options)
     cover_path = _write_temp_file(cover, settings)
     payload_bytes = payload.file.read()
-    output_path = settings.artifact_dir / "stego"
+    output_path = (settings.artifact_dir / "stego").resolve()
     output_path.mkdir(parents=True, exist_ok=True)
-    stego_path = output_path / f"{uuid.uuid4()}_{cover.filename}"
+    stego_path = (output_path / f"{uuid.uuid4()}_{cover.filename}").resolve()
 
     for embedder in registry.embedders(carrier):
         if method in embedder.supported_methods():
-            metrics = embedder.embed(method, str(cover_path), payload_bytes, str(stego_path), **opts)
+            try:
+                metrics = embedder.embed(method, str(cover_path), payload_bytes, str(stego_path), **opts)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            except Exception as exc:  # noqa: BLE001
+                raise HTTPException(status_code=500, detail=f"Embedding failed: {exc}") from exc
             log_operation("api_embed", carrier=carrier, method=method, output=str(stego_path))
             return JSONResponse({"metrics": metrics, "stego_path": str(stego_path)})
     raise HTTPException(status_code=404, detail="No embedder found")
@@ -143,10 +148,10 @@ async def embed(
 
 @app.post("/extract")
 async def extract(
-    carrier: str,
-    method: str,
+    carrier: str = Form(...),
+    method: str = Form(...),
     stego: UploadFile = File(...),
-    options: str = "{}",
+    options: str = Form("{}"),
     settings: Settings = Depends(get_settings),
 ) -> JSONResponse:
     if not settings.allow_external_networks and carrier == "network":
@@ -154,12 +159,25 @@ async def extract(
     opts = json.loads(options)
     stego_path = _write_temp_file(stego, settings)
     for extractor in registry.extractors(carrier):
-        if extractor.name == method.split("-")[0] or method in getattr(extractor, "supported_methods", lambda: [])():
-            result = extractor.extract(method, str(stego_path), **opts)
+        supported_methods = []
+        supported_fn = getattr(extractor, "supported_methods", None)
+        if callable(supported_fn):
+            try:
+                supported_methods = list(supported_fn())
+            except TypeError:
+                supported_methods = []
+        name_matches = method == extractor.name or method.startswith(f"{extractor.name}-")
+        if name_matches or method in supported_methods:
+            try:
+                result = extractor.extract(method, str(stego_path), **opts)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            except Exception as exc:  # noqa: BLE001
+                raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}") from exc
             payload = result.pop("payload", b"")
-            payload_path = settings.artifact_dir / "payloads"
+            payload_path = (settings.artifact_dir / "payloads").resolve()
             payload_path.mkdir(parents=True, exist_ok=True)
-            output_path = payload_path / f"{uuid.uuid4()}_{stego.filename}.bin"
+            output_path = (payload_path / f"{uuid.uuid4()}_{stego.filename}.bin").resolve()
             output_path.write_bytes(payload)
             log_operation("api_extract", carrier=carrier, method=method, output=str(output_path))
             return JSONResponse({"result": result, "payload_path": str(output_path)})
@@ -168,9 +186,9 @@ async def extract(
 
 @app.post("/detect")
 async def detect(
-    carrier: str,
+    carrier: str = Form(...),
     stego: UploadFile = File(...),
-    options: str = "{}",
+    options: str = Form("{}"),
     settings: Settings = Depends(get_settings),
 ) -> JSONResponse:
     if not settings.allow_external_networks and carrier == "network":

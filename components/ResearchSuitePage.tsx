@@ -178,11 +178,21 @@ const carriers: Record<CarrierKey, CarrierConfig> = {
         id: "frame-rgb-lsb",
         label: "Frame RGB LSB",
         description: "Sequential pixel LSB embedding across frames.",
+        sampleOptions: {
+          frame_step: 2,
+          max_frames: 600,
+          scale_width: 640,
+        },
       },
       {
         id: "haar-ll",
         label: "Haar DWT",
         description: "Embed bits in low-frequency Haar wavelet coefficients.",
+        sampleOptions: {
+          frame_step: 2,
+          max_frames: 400,
+          scale_width: 640,
+        },
       },
     ],
     extractMethods: [
@@ -471,7 +481,7 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
     setCoverFile(null);
     setPayloadFile(null);
     setStegoFile(null);
-  }, [operation, methodCatalog, downloadUrl]);
+  }, [operation, methodCatalog]);
 
   useEffect(() => {
     return () => {
@@ -636,7 +646,10 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
     const anchor = document.createElement("a");
     anchor.href = downloadUrl;
     anchor.download = download.filename || "artifact.bin";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
     anchor.click();
+    document.body.removeChild(anchor);
   };
 
   const renderResult = () => {
@@ -650,6 +663,7 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
 
     if (result.type === "embed") {
       const entries = Object.entries(result.payload.metrics ?? {});
+      const showImagePreview = download && downloadUrl && (download.contentType ?? "").startsWith("image/");
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -666,6 +680,18 @@ export function ResearchSuitePage({ onBack }: ResearchSuitePageProps) {
                   <span className="text-sm font-medium">{String(value)}</span>
                 </div>
               ))}
+            </div>
+          )}
+          {showImagePreview && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2">Preview</h4>
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <img
+                  src={downloadUrl}
+                  alt={download?.filename ?? "Embedded artifact preview"}
+                  className="max-h-64 w-full object-contain rounded"
+                />
+              </div>
             </div>
           )}
         </div>

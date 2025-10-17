@@ -101,6 +101,9 @@ class VideoDWTExtractor(Extractor):
     name: str = "dwt"
     carrier: str = "video"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["haar-ll"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "haar-ll":
             raise ValueError("Unsupported method")
