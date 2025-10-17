@@ -87,6 +87,9 @@ class ImageLSBExtractor(Extractor):
     name: str = "lsb"
     carrier: str = "image"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["rgb-lsb"]
+
     def extract(
         self,
         method: str,

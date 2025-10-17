@@ -74,6 +74,9 @@ class AudioLSBExtractor(Extractor):
     name: str = "lsb"
     carrier: str = "audio"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["pcm-lsb"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "pcm-lsb":
             raise ValueError("Unsupported method")

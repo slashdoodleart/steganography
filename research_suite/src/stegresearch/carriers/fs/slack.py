@@ -41,6 +41,9 @@ class SlackSpaceExtractor(Extractor):
     name: str = "slack"
     carrier: str = "fs"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["pseudo-slack"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "pseudo-slack":
             raise ValueError("Unsupported method")

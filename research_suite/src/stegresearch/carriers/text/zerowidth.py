@@ -57,6 +57,9 @@ class ZeroWidthExtractor(Extractor):
     name: str = "zero-width"
     carrier: str = "text"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["zero-width"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "zero-width":
             raise ValueError("Unsupported method")

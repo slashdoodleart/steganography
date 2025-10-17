@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Iterable
 
 import cv2
 import numpy as np
@@ -53,6 +53,9 @@ class WatermarkEmbedder(Embedder):
 class WatermarkExtractor(Extractor):
     name: str = "watermark-dct"
     carrier: str = "watermark"
+
+    def supported_methods(self) -> Iterable[str]:
+        return ["idct"]
 
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "idct":

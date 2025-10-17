@@ -1,10 +1,13 @@
 import { toast } from "sonner";
 
-const DEFAULT_API_BASE = "http://127.0.0.1:8000";
+const DEFAULT_API_BASE = "http://127.0.0.1:8100";
+const DEFAULT_RESEARCH_API_BASE = "http://127.0.0.1:8000";
 const metaEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 const apiOrigin = metaEnv.VITE_API_BASE_URL?.replace(/\/$/, "") ?? DEFAULT_API_BASE;
 const API_BASE_URL = `${apiOrigin}/api/v1`;
-const researchOrigin = metaEnv.VITE_RESEARCH_API_BASE_URL?.replace(/\/$/, "") ?? apiOrigin;
+const researchOrigin =
+  metaEnv.VITE_RESEARCH_API_BASE_URL?.replace(/\/$/, "") ??
+  (metaEnv.VITE_API_BASE_URL ? apiOrigin : DEFAULT_RESEARCH_API_BASE);
 
 interface StegoResponsePayload {
   filename: string;

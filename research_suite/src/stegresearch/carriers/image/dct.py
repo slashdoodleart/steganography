@@ -94,6 +94,9 @@ class ImageDCTExtractor(Extractor):
     name: str = "dct"
     carrier: str = "image"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["dct-midband"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "dct-midband":
             raise ValueError("Unsupported DCT method")

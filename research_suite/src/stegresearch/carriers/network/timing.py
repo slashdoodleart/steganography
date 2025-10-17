@@ -57,6 +57,9 @@ class NetworkTimingExtractor(Extractor):
     name: str = "timing"
     carrier: str = "network"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["inter-packet-gap"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "inter-packet-gap":
             raise ValueError("Unsupported method")

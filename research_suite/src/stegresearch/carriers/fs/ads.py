@@ -42,6 +42,9 @@ class AlternateStreamExtractor(Extractor):
     name: str = "ads"
     carrier: str = "fs"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["sidecar"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "sidecar":
             raise ValueError("Unsupported method")

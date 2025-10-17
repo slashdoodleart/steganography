@@ -68,6 +68,9 @@ class AudioEchoExtractor(Extractor):
     name: str = "echo"
     carrier: str = "audio"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["echo-binary"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "echo-binary":
             raise ValueError("Unsupported method")

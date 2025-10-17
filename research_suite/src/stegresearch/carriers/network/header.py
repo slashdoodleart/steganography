@@ -65,6 +65,9 @@ class NetworkHeaderExtractor(Extractor):
     name: str = "header"
     carrier: str = "network"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["ip-id-lsb"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "ip-id-lsb":
             raise ValueError("Unsupported method")

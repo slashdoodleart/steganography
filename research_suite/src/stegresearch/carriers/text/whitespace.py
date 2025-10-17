@@ -49,6 +49,9 @@ class WhitespaceExtractor(Extractor):
     name: str = "whitespace"
     carrier: str = "text"
 
+    def supported_methods(self) -> Iterable[str]:
+        return ["trailing-whitespace"]
+
     def extract(self, method: str, stego_path: str, **options: Any) -> Dict[str, Any]:
         if method != "trailing-whitespace":
             raise ValueError("Unsupported method")
