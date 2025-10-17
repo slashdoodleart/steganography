@@ -17,6 +17,10 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://127.0.0.1:5173", "http://localhost:5173"],
         description="Origins permitted to access the API",
     )
+    allowed_origin_regex: str | None = Field(
+        default=r"^https?://(localhost|127\.0\.0\.1)(:\\d+)?$",
+        description="Regex pattern for dynamically allowed origins",
+    )
 
     class Config:
         env_prefix = "STEGOVISION_"
