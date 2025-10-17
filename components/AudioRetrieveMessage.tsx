@@ -7,6 +7,7 @@ import { Progress } from "./ui/progress";
 import { AudioWaveform } from "./AudioWaveform";
 import { toast } from "sonner";
 import { copyToClipboard } from "./utils/clipboard";
+import { detectAudioSteganography, retrieveMessageFromAudio } from "./utils/api";
 
 interface AudioRetrieveMessageProps {
   onBack: () => void;
@@ -19,6 +20,7 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
   const [extractedMessage, setExtractedMessage] = useState<string | null>(null);
   const [hasMessage, setHasMessage] = useState(true);
   const [highlightRegions, setHighlightRegions] = useState<{ start: number; end: number }[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleExtract = async () => {
     if (!selectedFile) return;
@@ -26,33 +28,43 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
     setIsProcessing(true);
     setProgress(0);
     setExtractedMessage(null);
+    setErrorMessage(null);
 
-    // Simulate extraction
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsProcessing(false);
+    const tick = window.setInterval(() => {
+      setProgress((prev) => (prev >= 92 ? prev : prev + 6));
+    }, 120);
 
-          const found = Math.random() > 0.2;
-          setHasMessage(found);
+    try {
+      const response = await retrieveMessageFromAudio(selectedFile);
+      const found = response.bytes_length > 0 && response.message.trim().length > 0;
+      setHasMessage(found);
+      if (found) {
+        setExtractedMessage(response.message);
+        setHighlightRegions([{ start: 0.2, end: 0.8 }]);
+        toast.success("Hidden message retrieved");
+      } else {
+        setExtractedMessage("");
+        setHighlightRegions([]);
+      }
 
-          if (found) {
-            setExtractedMessage(
-              "This is a confidential message that was hidden in the audio file. The steganography technique used LSB (Least Significant Bit) encoding to embed this text imperceptibly within the audio waveform."
-            );
-            setHighlightRegions([
-              { start: 0.15, end: 0.25 },
-              { start: 0.45, end: 0.55 },
-              { start: 0.75, end: 0.82 },
-            ]);
-          }
+      try {
+        await detectAudioSteganography(selectedFile);
+      } catch (error) {
+        // Detection failures are non-blocking for retrieval flow
+      }
 
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 80);
+      setProgress(100);
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : "Failed to extract message";
+      setErrorMessage(messageText);
+      setHasMessage(false);
+      setExtractedMessage(null);
+      setHighlightRegions([]);
+      setProgress(100);
+    } finally {
+      window.clearInterval(tick);
+      setIsProcessing(false);
+    }
   };
 
   const handleCopy = async () => {
@@ -73,6 +85,7 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
     setExtractedMessage(null);
     setHasMessage(true);
     setHighlightRegions([]);
+    setErrorMessage(null);
   };
 
   return (
@@ -277,6 +290,16 @@ export function AudioRetrieveMessage({ onBack }: AudioRetrieveMessageProps) {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {errorMessage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
+              >
+                {errorMessage}
+              </motion.div>
+            )}
           </div>
         </div>
 

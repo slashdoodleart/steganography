@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { WaveformPoint } from "./utils/api";
 
 interface AudioWaveformProps {
   audioFile?: File | null;
   highlightRegions?: { start: number; end: number }[];
   isProcessing?: boolean;
   variant?: "light" | "dark";
+  waveform?: WaveformPoint[];
 }
 
 export function AudioWaveform({
@@ -13,12 +15,32 @@ export function AudioWaveform({
   highlightRegions = [],
   isProcessing = false,
   variant = "dark",
+  waveform,
 }: AudioWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [bars] = useState(() => {
-    // Generate random waveform bars for demo
-    return Array.from({ length: 100 }, () => Math.random() * 0.8 + 0.2);
-  });
+  const [bars, setBars] = useState<number[]>([]);
+
+  const fallbackBars = useMemo(
+    () => Array.from({ length: 120 }, () => Math.random() * 0.8 + 0.2),
+    []
+  );
+
+  const normalizedBars = useMemo(() => {
+    const barCount = 120;
+    if (waveform && waveform.length > 0) {
+      const sorted = [...waveform].sort((a, b) => a.position - b.position);
+      const step = (sorted.length - 1) / Math.max(barCount - 1, 1);
+      return Array.from({ length: barCount }, (_, index) => {
+        const sampleIndex = Math.min(sorted.length - 1, Math.round(index * step));
+        return Math.min(Math.abs(sorted[sampleIndex].amplitude), 1);
+      });
+    }
+    return fallbackBars;
+  }, [waveform, fallbackBars]);
+
+  useEffect(() => {
+    setBars(normalizedBars);
+  }, [normalizedBars]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,7 +52,7 @@ export function AudioWaveform({
     const draw = () => {
       const width = canvas.width;
       const height = canvas.height;
-      const barWidth = width / bars.length;
+  const barWidth = width / Math.max(bars.length, 1);
 
       // Clear canvas
       ctx.clearRect(0, 0, width, height);
@@ -41,7 +63,7 @@ export function AudioWaveform({
         const y = (height - barHeight) / 2;
 
         // Check if this bar is in a highlighted region
-        const position = index / bars.length;
+        const position = bars.length > 1 ? index / (bars.length - 1) : 0;
         const isHighlighted = highlightRegions.some(
           (region) => position >= region.start && position <= region.end
         );
@@ -53,7 +75,7 @@ export function AudioWaveform({
           ctx.fillStyle = isHighlighted ? "#D0D0D0" : "#505050";
         }
 
-        ctx.fillRect(x, y, barWidth - 1, barHeight);
+        ctx.fillRect(x, y, Math.max(barWidth - 1, 1), barHeight);
       });
     };
 

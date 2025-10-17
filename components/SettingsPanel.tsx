@@ -102,8 +102,8 @@ export function SettingsPanel({ isOpen, onClose, isDarkMode, onToggleDarkMode }:
 
             <div className="p-4 rounded-lg bg-muted border border-border">
               <p className="text-xs text-muted-foreground">
-                <span className="text-foreground">🔒 Privacy:</span> All processing happens
-                locally in your browser. Your files and messages are never uploaded to any server.
+                <span className="text-foreground">🔒 Privacy:</span> Files are transmitted securely to
+                the StegoVision backend for processing and never stored after your request completes.
               </p>
             </div>
           </div>

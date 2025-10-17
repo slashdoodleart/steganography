@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Search, AlertTriangle, CheckCircle, Shield } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { FileUpload } from "./FileUpload";
+import { detectAudioSteganography, detectImageSteganography, DetectionResponse } from "./utils/api";
 
 interface DetectorPageProps {
   onBack: () => void;
@@ -25,6 +26,60 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<DetectionResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fileCategory = useMemo<"image" | "audio">(() => {
+    if (!selectedFile) {
+      return "image";
+    }
+    if (selectedFile.type.startsWith("audio")) {
+      return "audio";
+    }
+    return "image";
+  }, [selectedFile]);
+
+  const handleFileSelect = (file: File | null) => {
+    setSelectedFile(file);
+    setIsScanning(false);
+    setProgress(0);
+    setResult(null);
+    setErrorMessage(null);
+  };
+
+  const deriveIndicators = (response: DetectionResponse): DetectionResult["indicators"] => {
+    const details = response.details ?? {};
+    const ratio = typeof details.lsb_ratio === "number" ? details.lsb_ratio : 0.5;
+    const variance = typeof details.variance === "number" ? details.variance : 0;
+    const entropy = typeof details.transitions === "number" ? details.transitions : 0;
+
+    const anomalyScore = Math.min(Math.abs(ratio - 0.5) * 200, 100);
+    const varianceScore = Math.min(Math.sqrt(Math.max(variance, 0)) * 200, 100);
+    const entropyScore = Math.min(entropy * 100, 100);
+
+    const toStatus = (value: number): "high" | "medium" | "low" => {
+      if (value >= 70) return "high";
+      if (value >= 40) return "medium";
+      return "low";
+    };
+
+    return [
+      {
+        name: "LSB Distribution",
+        value: anomalyScore,
+        status: toStatus(anomalyScore),
+      },
+      {
+        name: "Variance Analysis",
+        value: varianceScore,
+        status: toStatus(varianceScore),
+      },
+      {
+        name: "Transition Entropy",
+        value: entropyScore,
+        status: toStatus(entropyScore),
+      },
+    ];
+  };
 
   const handleScan = async () => {
     if (!selectedFile) return;
@@ -32,48 +87,30 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
     setIsScanning(true);
     setProgress(0);
     setResult(null);
+    setErrorMessage(null);
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsScanning(false);
+    const tick = window.setInterval(() => {
+      setProgress((prev) => (prev >= 90 ? prev : prev + 4));
+    }, 120);
 
-          const probability = Math.random();
-          const hasStego = probability > 0.5;
-
-          setResult({
-            probability: probability * 100,
-            hasStego,
-            indicators: [
-              {
-                name: "LSB Analysis",
-                value: 40 + Math.random() * 60,
-                status: hasStego ? "high" : "low",
-              },
-              {
-                name: "Chi-Square Test",
-                value: 30 + Math.random() * 70,
-                status: hasStego ? "high" : "medium",
-              },
-              {
-                name: "Histogram Analysis",
-                value: 20 + Math.random() * 80,
-                status: hasStego ? "medium" : "low",
-              },
-              {
-                name: "Entropy Detection",
-                value: 35 + Math.random() * 65,
-                status: hasStego ? "high" : "low",
-              },
-            ],
-          });
-
-          return 100;
-        }
-        return prev + 4;
+    try {
+      const response = fileCategory === "audio"
+        ? await detectAudioSteganography(selectedFile)
+        : await detectImageSteganography(selectedFile);
+      const probability = Math.min(100, Math.max(0, response.confidence * 100));
+      setResult({
+        probability,
+        hasStego: response.suspected,
+        indicators: deriveIndicators(response),
       });
-    }, 100);
+      setProgress(100);
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : "Failed to analyze file";
+      setErrorMessage(messageText);
+    } finally {
+      window.clearInterval(tick);
+      setIsScanning(false);
+    }
   };
 
   const handleReset = () => {
@@ -127,7 +164,7 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
             <div>
               <label className="block mb-3 text-sm text-black">Upload File to Analyze</label>
               <FileUpload
-                onFileSelect={setSelectedFile}
+                onFileSelect={handleFileSelect}
                 acceptedTypes="image/*,audio/*"
                 label="Choose file to scan"
                 icon="image"
@@ -275,6 +312,16 @@ export function DetectorPage({ onBack }: DetectorPageProps) {
             )}
           </div>
         </Card>
+
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
+          >
+            {errorMessage}
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}

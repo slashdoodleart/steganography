@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Lock, Download, CheckCircle2, Music } from "lucide-react";
 import { Button } from "./ui/button";
@@ -7,6 +7,8 @@ import { Textarea } from "./ui/textarea";
 import { Progress } from "./ui/progress";
 import { AudioWaveform } from "./AudioWaveform";
 import { FileUpload } from "./FileUpload";
+import { embedAudioSuite, StegoAssetResponse, WaveformPoint } from "./utils/api";
+import { toast } from "sonner";
 
 interface AudioHideMessageProps {
   onBack: () => void;
@@ -19,44 +21,92 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [highlightRegions, setHighlightRegions] = useState<{ start: number; end: number }[]>([]);
+  const [waveform, setWaveform] = useState<WaveformPoint[]>([]);
+  const [asset, setAsset] = useState<StegoAssetResponse | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+    };
+  }, [downloadUrl]);
+
+  const resetDownload = () => {
+    if (downloadUrl) {
+      URL.revokeObjectURL(downloadUrl);
+    }
+    setDownloadUrl(null);
+    setAsset(null);
+  };
+
+  const deriveHighlights = (points: WaveformPoint[]) => {
+    const ranges: { start: number; end: number }[] = [];
+    let current: { start: number; end: number } | null = null;
+    const threshold = 0.65;
+
+    points.forEach((point) => {
+      const magnitude = Math.abs(point.amplitude);
+      if (magnitude >= threshold) {
+        if (!current) {
+          current = { start: point.position, end: point.position };
+        } else {
+          current.end = point.position;
+        }
+      } else if (current) {
+        ranges.push(current);
+        current = null;
+      }
+    });
+
+    if (current) {
+      ranges.push(current);
+    }
+
+    return ranges;
+  };
 
   const handleProcess = async () => {
     if (!selectedFile || !message) return;
 
     setIsProcessing(true);
     setProgress(0);
+    setErrorMessage(null);
+    setIsComplete(false);
+    resetDownload();
 
-    // Simulate processing and highlight regions
-    const regions = [
-      { start: 0.2, end: 0.3 },
-      { start: 0.5, end: 0.6 },
-      { start: 0.8, end: 0.85 },
-    ];
-    setHighlightRegions(regions);
+    const tick = window.setInterval(() => {
+      setProgress((prev) => (prev >= 92 ? prev : prev + 4));
+    }, 140);
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsProcessing(false);
-          setIsComplete(true);
-          return 100;
-        }
-        return prev + 4;
-      });
-    }, 100);
+    try {
+      const response = await embedAudioSuite(selectedFile, message);
+      const url = URL.createObjectURL(response.asset.blob);
+      setAsset(response.asset);
+      setDownloadUrl(url);
+      setWaveform(response.waveform);
+      setHighlightRegions(deriveHighlights(response.waveform));
+      setIsComplete(true);
+      setProgress(100);
+      toast.success("Audio stego file generated");
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : "Failed to embed message";
+      setErrorMessage(messageText);
+      setIsComplete(false);
+    } finally {
+      window.clearInterval(tick);
+      setIsProcessing(false);
+    }
   };
 
   const handleDownload = () => {
-    const blob = new Blob(["Processed audio with hidden message"], {
-      type: "application/octet-stream",
-    });
-    const url = URL.createObjectURL(blob);
+    if (!asset || !downloadUrl) return;
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `stego_${selectedFile?.name || "audio.wav"}`;
+    a.href = downloadUrl;
+    a.download = asset.filename || `stego_${selectedFile?.name || "audio.wav"}`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
   const handleReset = () => {
@@ -66,6 +116,9 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
     setProgress(0);
     setIsComplete(false);
     setHighlightRegions([]);
+    setWaveform([]);
+    setErrorMessage(null);
+    resetDownload();
   };
 
   return (
@@ -167,7 +220,7 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
               {!isProcessing && !isComplete && (
                 <Button
                   onClick={handleProcess}
-                  disabled={!selectedFile || !message}
+                  disabled={!selectedFile || !message || isProcessing}
                   className="w-full bg-black text-white hover:bg-[#303030] disabled:bg-[#D0D0D0] disabled:text-[#808080]"
                 >
                   <Lock className="w-4 h-4 mr-2" />
@@ -184,6 +237,7 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
               <AudioWaveform
                 audioFile={selectedFile}
                 highlightRegions={highlightRegions}
+                waveform={waveform}
                 isProcessing={isProcessing}
                 variant="light"
               />
@@ -254,6 +308,16 @@ export function AudioHideMessage({ onBack }: AudioHideMessageProps) {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {errorMessage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
+              >
+                {errorMessage}
+              </motion.div>
+            )}
           </div>
         </div>
 

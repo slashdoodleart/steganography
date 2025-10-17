@@ -1,0 +1,21 @@
+[project]
+name = "stegovision-backend"
+version = "0.1.0"
+description = "Backend services for the StegoVision steganography platform"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.23",
+    "pillow>=10.0",
+    "python-multipart>=0.0.6",
+    "cryptography>=41.0",
+    "numpy>=1.25",
+    "pydantic-settings>=2.1"
+]
+
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]

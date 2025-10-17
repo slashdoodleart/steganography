@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Image, Music, Lock, Download, CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -7,6 +7,8 @@ import { Textarea } from "./ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import { Progress } from "./ui/progress";
 import { FileUpload } from "./FileUpload";
+import { hideMessageInAudio, hideMessageInImage, StegoAssetResponse } from "./utils/api";
+import { toast } from "sonner";
 
 interface HideMessageProps {
   onBack: () => void;
@@ -19,34 +21,65 @@ export function HideMessage({ onBack }: HideMessageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [asset, setAsset] = useState<StegoAssetResponse | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+    };
+  }, [downloadUrl]);
+
+  const resetDownload = () => {
+    if (downloadUrl) {
+      URL.revokeObjectURL(downloadUrl);
+      setDownloadUrl(null);
+    }
+    setAsset(null);
+  };
 
   const handleProcess = async () => {
     if (!selectedFile || !message) return;
 
     setIsProcessing(true);
     setProgress(0);
+    setIsComplete(false);
+    setErrorMessage(null);
+    resetDownload();
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsProcessing(false);
-          setIsComplete(true);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 100);
+    const tick = window.setInterval(() => {
+      setProgress((prev) => (prev >= 90 ? prev : prev + 5));
+    }, 150);
+
+    try {
+      const response = fileType === "image"
+        ? await hideMessageInImage(selectedFile, message)
+        : await hideMessageInAudio(selectedFile, message);
+      const url = URL.createObjectURL(response.blob);
+      setAsset(response);
+      setDownloadUrl(url);
+      setIsComplete(true);
+      setProgress(100);
+      toast.success("Message embedded successfully");
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : "Failed to hide message";
+      setErrorMessage(messageText);
+      setIsComplete(false);
+    } finally {
+      window.clearInterval(tick);
+      setIsProcessing(false);
+    }
   };
 
   const handleDownload = () => {
-    const blob = new Blob(["Processed file with hidden message"], { type: "application/octet-stream" });
-    const url = URL.createObjectURL(blob);
+    if (!asset || !downloadUrl) return;
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `stego_${selectedFile?.name || "file"}`;
+    a.href = downloadUrl;
+    a.download = asset.filename || `stego_${selectedFile?.name || "file"}`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
   const handleReset = () => {
@@ -55,6 +88,8 @@ export function HideMessage({ onBack }: HideMessageProps) {
     setIsProcessing(false);
     setProgress(0);
     setIsComplete(false);
+    setErrorMessage(null);
+    resetDownload();
   };
 
   return (
@@ -201,6 +236,16 @@ export function HideMessage({ onBack }: HideMessageProps) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {errorMessage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-6 p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
+            >
+              {errorMessage}
+            </motion.div>
+          )}
 
           {!isProcessing && !isComplete && (
             <motion.div

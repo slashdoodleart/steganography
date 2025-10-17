@@ -1,7 +1,10 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Music, Lock, Unlock, Search, ArrowLeft, AudioLines } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
+import { AudioOverviewPayload, fetchAudioOverview } from "./utils/api";
+import { toast } from "sonner";
 
 interface AudioModePageProps {
   onNavigate: (page: string) => void;
@@ -9,26 +12,82 @@ interface AudioModePageProps {
 }
 
 export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
-  const features = [
-    {
-      icon: Lock,
-      title: "Hide in Audio",
-      description: "Embed secret messages into audio files with precision",
-      action: "audio-hide",
-    },
-    {
-      icon: Unlock,
-      title: "Retrieve from Audio",
-      description: "Extract hidden messages from audio steganography",
-      action: "audio-retrieve",
-    },
-    {
-      icon: Search,
-      title: "Detect in Audio",
-      description: "Analyze audio files for potential steganography",
-      action: "audio-detect",
-    },
+  const [overview, setOverview] = useState<AudioOverviewPayload | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadOverview = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchAudioOverview();
+        if (isMounted) {
+          setOverview(data);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadOverview();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const actionCards = useMemo(() => {
+    const actions = overview?.actions ?? [
+      {
+        title: "Hide in Audio",
+        description: "Embed secret messages into audio files with precision",
+        cta: "Get Started",
+      },
+      {
+        title: "Retrieve from Audio",
+        description: "Extract hidden messages from audio steganography",
+        cta: "Get Started",
+      },
+      {
+        title: "Detect in Audio",
+        description: "Analyze audio files for potential steganography",
+        cta: "Get Started",
+      },
+    ];
+
+    const iconMap: Record<string, typeof Lock> = {
+      "Hide in Audio": Lock,
+      "Retrieve from Audio": Unlock,
+      "Detect in Audio": Search,
+    };
+
+    return actions.map((action) => ({
+      ...action,
+      icon: iconMap[action.title] ?? Music,
+      key: action.title.toLowerCase().includes("hide")
+        ? "audio-hide"
+        : action.title.toLowerCase().includes("retrieve")
+        ? "audio-retrieve"
+        : "audio-detect",
+    }));
+  }, [overview]);
+
+  const featurePills = overview?.features ?? [
+    { title: "WAV Support", description: "Optimized for 16-bit PCM audio" },
+    { title: "Visual Feedback", description: "Waveform analysis for transparency" },
+    { title: "Advanced Detection", description: "Heuristic-driven steganography checks" },
   ];
+
+  const heroTitle = overview?.hero_title ?? "Audio Steganography";
+  const heroSubtitle = overview?.hero_subtitle ??
+    "Professional-grade audio steganography tools with minimalistic design. Hide and reveal messages in audio files with precision and elegance.";
+  const heroNarrative = overview?.narrative ??
+    "Audio steganography uses sophisticated algorithms to embed data in the least significant bits of audio samples, making changes imperceptible to human hearing while maintaining file integrity.";
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 bg-white">
@@ -63,7 +122,7 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
             transition={{ delay: 0.4 }}
             className="text-5xl md:text-6xl mb-6 text-black"
           >
-            Audio Steganography
+            {heroTitle}
           </motion.h1>
 
           <motion.p
@@ -72,8 +131,7 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
             transition={{ delay: 0.6 }}
             className="text-lg text-[#505050] mb-8 max-w-2xl mx-auto"
           >
-            Professional-grade audio steganography tools with minimalistic design. Hide and reveal
-            messages in audio files with precision and elegance.
+            {heroSubtitle}
           </motion.p>
 
           <motion.div
@@ -82,34 +140,31 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
             transition={{ delay: 0.8 }}
             className="flex flex-wrap gap-4 justify-center items-center"
           >
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 border border-black/10">
-              <Music className="w-4 h-4 text-black" />
-              <span className="text-sm text-black">WAV Support</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 border border-black/10">
-              <AudioLines className="w-4 h-4 text-black" />
-              <span className="text-sm text-black">Visual Feedback</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 border border-black/10">
-              <Search className="w-4 h-4 text-black" />
-              <span className="text-sm text-black">Advanced Detection</span>
-            </div>
+            {featurePills.map((feature) => (
+              <div
+                key={feature.title}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 border border-black/10"
+              >
+                <AudioLines className="w-4 h-4 text-black" />
+                <span className="text-sm text-black">{feature.title}</span>
+              </div>
+            ))}
           </motion.div>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
+          {actionCards.map((action, index) => {
+            const Icon = action.icon;
             return (
               <motion.div
-                key={feature.action}
+                key={action.key}
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 * index, duration: 0.5 }}
               >
                 <Card
                   className="border-[#D0D0D0] bg-white hover:bg-[#F5F5F5] shadow-lg transition-all duration-300 group cursor-pointer h-full"
-                  onClick={() => onNavigate(feature.action)}
+                  onClick={() => onNavigate(action.key)}
                 >
                   <div className="p-8">
                     <motion.div
@@ -122,17 +177,17 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
                       </div>
                     </motion.div>
 
-                    <h3 className="text-xl text-black mb-3">{feature.title}</h3>
-                    <p className="text-[#505050] mb-6">{feature.description}</p>
+                    <h3 className="text-xl text-black mb-3">{action.title}</h3>
+                    <p className="text-[#505050] mb-6">{action.description}</p>
 
                     <Button
                       className="w-full bg-black text-white hover:bg-[#303030] group-hover:shadow-md transition-shadow"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onNavigate(feature.action);
+                        onNavigate(action.key);
                       }}
                     >
-                      Get Started
+                      {action.cta}
                     </Button>
                   </div>
                 </Card>
@@ -148,13 +203,19 @@ export function AudioModePage({ onNavigate, onBack }: AudioModePageProps) {
           className="mt-16 text-center"
         >
           <div className="inline-block p-6 rounded-2xl bg-black/5 border border-black/10">
-            <p className="text-sm text-[#505050] max-w-2xl">
-              <span className="text-black">Audio steganography</span> uses sophisticated algorithms
-              to embed data in the least significant bits of audio samples, making changes
-              imperceptible to human hearing while maintaining file integrity.
-            </p>
+            <p className="text-sm text-[#505050] max-w-2xl">{heroNarrative}</p>
           </div>
         </motion.div>
+
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 text-center text-sm text-[#808080]"
+          >
+            Loading audio suite data…
+          </motion.div>
+        )}
       </div>
     </div>
   );

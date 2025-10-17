@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Unlock, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
@@ -7,6 +7,7 @@ import { Progress } from "./ui/progress";
 import { FileUpload } from "./FileUpload";
 import { toast } from "sonner";
 import { copyToClipboard } from "./utils/clipboard";
+import { retrieveMessageFromAudio, retrieveMessageFromImage } from "./utils/api";
 
 interface RetrieveMessageProps {
   onBack: () => void;
@@ -18,6 +19,26 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
   const [progress, setProgress] = useState(0);
   const [extractedMessage, setExtractedMessage] = useState<string | null>(null);
   const [hasMessage, setHasMessage] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fileCategory = useMemo<"image" | "audio">(() => {
+    if (!selectedFile) {
+      return "image";
+    }
+    if (selectedFile.type.startsWith("audio")) {
+      return "audio";
+    }
+    return "image";
+  }, [selectedFile]);
+
+  const handleFileSelect = (file: File | null) => {
+    setSelectedFile(file);
+    setIsProcessing(false);
+    setProgress(0);
+    setExtractedMessage(null);
+    setHasMessage(true);
+    setErrorMessage(null);
+  };
 
   const handleExtract = async () => {
     if (!selectedFile) return;
@@ -25,27 +46,30 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
     setIsProcessing(true);
     setProgress(0);
     setExtractedMessage(null);
+    setErrorMessage(null);
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsProcessing(false);
-          
-          const found = Math.random() > 0.2;
-          setHasMessage(found);
-          
-          if (found) {
-            setExtractedMessage(
-              "This is a secret message that was hidden in the file. Lorem ipsum dolor sit amet, consectetur adipiscing elit. The message has been successfully extracted from the steganography container."
-            );
-          }
-          
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 80);
+    const tick = window.setInterval(() => {
+      setProgress((prev) => (prev >= 90 ? prev : prev + 6));
+    }, 120);
+
+    try {
+      const response = fileCategory === "audio"
+        ? await retrieveMessageFromAudio(selectedFile)
+        : await retrieveMessageFromImage(selectedFile);
+      const found = response.bytes_length > 0 && response.message.trim().length > 0;
+      setHasMessage(found);
+      setExtractedMessage(found ? response.message : "");
+      setProgress(100);
+      toast.success("Message extracted successfully");
+    } catch (error) {
+      const messageText = error instanceof Error ? error.message : "Failed to extract message";
+      setErrorMessage(messageText);
+      setHasMessage(false);
+      setExtractedMessage(null);
+    } finally {
+      window.clearInterval(tick);
+      setIsProcessing(false);
+    }
   };
 
   const handleCopy = async () => {
@@ -65,6 +89,7 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
     setProgress(0);
     setExtractedMessage(null);
     setHasMessage(true);
+    setErrorMessage(null);
   };
 
   return (
@@ -105,7 +130,7 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
             <div>
               <label className="block mb-3 text-sm text-black">Upload File</label>
               <FileUpload
-                onFileSelect={setSelectedFile}
+                onFileSelect={handleFileSelect}
                 acceptedTypes="image/*,audio/*"
                 label="Choose image or audio file"
                 icon="image"
@@ -204,6 +229,16 @@ export function RetrieveMessage({ onBack }: RetrieveMessageProps) {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {errorMessage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
+              >
+                {errorMessage}
+              </motion.div>
+            )}
 
             {!isProcessing && extractedMessage === null && (
               <motion.div
