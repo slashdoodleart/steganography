@@ -1,14 +1,14 @@
-import { useCallback, useState } from "react";
-import { Upload, X, Image, Music } from "lucide-react";
+import { useCallback, useId, useState } from "react";
+import { Upload, X, Image, Music, File as FileIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "./ui/button";
 
 interface FileUploadProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect: (file: File | null) => void;
   acceptedTypes: string;
   maxSize?: number;
   label?: string;
-  icon?: "image" | "audio";
+  icon?: "image" | "audio" | "file";
 }
 
 export function FileUpload({
@@ -21,6 +21,7 @@ export function FileUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string>("");
+  const inputId = useId();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -66,9 +67,10 @@ export function FileUpload({
   const clearFile = () => {
     setSelectedFile(null);
     setError("");
+    onFileSelect(null);
   };
 
-  const IconComponent = icon === "image" ? Image : Music;
+  const IconComponent = icon === "image" ? Image : icon === "audio" ? Music : FileIcon;
 
   return (
     <div className="w-full">
@@ -85,7 +87,7 @@ export function FileUpload({
       >
         <input
           type="file"
-          id="file-upload"
+          id={inputId}
           className="hidden"
           accept={acceptedTypes}
           onChange={handleFileInput}
@@ -95,7 +97,7 @@ export function FileUpload({
           {!selectedFile ? (
             <motion.label
               key="upload"
-              htmlFor="file-upload"
+              htmlFor={inputId}
               className="flex flex-col items-center justify-center cursor-pointer"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

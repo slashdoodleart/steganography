@@ -12,6 +12,7 @@ import { AudioModePage } from "./components/AudioModePage";
 import { AudioHideMessage } from "./components/AudioHideMessage";
 import { AudioRetrieveMessage } from "./components/AudioRetrieveMessage";
 import { AudioDetector } from "./components/AudioDetector";
+import { ResearchSuitePage } from "./components/ResearchSuitePage";
 
 type Page =
   | "home"
@@ -21,7 +22,8 @@ type Page =
   | "audio-mode"
   | "audio-hide"
   | "audio-retrieve"
-  | "audio-detect";
+  | "audio-detect"
+  | "research";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -65,6 +67,7 @@ export default function App() {
         {currentPage === "audio-detect" && (
           <AudioDetector key="audio-detect" onBack={handleAudioModeBack} />
         )}
+        {currentPage === "research" && <ResearchSuitePage key="research" onBack={handleBack} />}
       </AnimatePresence>
 
       <AnimatePresence>

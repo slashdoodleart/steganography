@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Lock, Unlock, Search, Shield, Zap, Eye } from "lucide-react";
+import { Lock, Unlock, Search, Shield, Zap, Eye, FlaskConical } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
@@ -26,6 +26,12 @@ export function HomePage({ onNavigate }: HomePageProps) {
       title: "Detect Steganography",
       description: "Analyze files for potential hidden content",
       action: "detect",
+    },
+    {
+      icon: FlaskConical,
+      title: "Research Suite",
+      description: "Access complete multi-carrier tooling from the new backend",
+      action: "research",
     },
   ];
 
@@ -82,8 +88,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
             transition={{ delay: 0.6 }}
             className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
           >
-            Advanced steganography platform for hiding and revealing secret messages in images and
-            audio files. Secure, fast, and beautifully designed.
+            Advanced steganography platform spanning imagery, audio, video, text, network, filesystem,
+            and watermark workflows – now aligned with the full research suite we just shipped.
           </motion.p>
 
           <motion.div
@@ -108,7 +114,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
         </motion.div>
 
         {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6">
+  <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (

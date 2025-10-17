@@ -1,8 +1,10 @@
 import { toast } from "sonner";
 
 const DEFAULT_API_BASE = "http://127.0.0.1:8000";
-const apiOrigin = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? DEFAULT_API_BASE;
+const metaEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+const apiOrigin = metaEnv.VITE_API_BASE_URL?.replace(/\/$/, "") ?? DEFAULT_API_BASE;
 const API_BASE_URL = `${apiOrigin}/api/v1`;
+const researchOrigin = metaEnv.VITE_RESEARCH_API_BASE_URL?.replace(/\/$/, "") ?? apiOrigin;
 
 interface StegoResponsePayload {
   filename: string;
@@ -45,8 +47,8 @@ interface StegoAsset {
   mediaType: string;
 }
 
-async function request<T>(path: string, init: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, init);
+async function requestFromBase<T>(base: string, path: string, init: RequestInit): Promise<T> {
+  const response = await fetch(`${base}${path}`, init);
   if (!response.ok) {
     const text = await response.text();
     const message = (() => {
@@ -74,6 +76,14 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return JSON.parse(text) as T;
 }
 
+async function request<T>(path: string, init: RequestInit): Promise<T> {
+  return requestFromBase<T>(API_BASE_URL, path, init);
+}
+
+async function requestResearch<T>(path: string, init: RequestInit): Promise<T> {
+  return requestFromBase<T>(researchOrigin, path, init);
+}
+
 function buildFormData(entries: Record<string, FormDataEntryValue | undefined>): FormData {
   const formData = new FormData();
   for (const [key, value] of Object.entries(entries)) {
@@ -96,6 +106,13 @@ function base64ToBlob(payload: string, mediaType: string): Blob {
 
 async function postMultipart<T>(path: string, formData: FormData): Promise<T> {
   return request<T>(path, {
+    method: "POST",
+    body: formData,
+  });
+}
+
+async function postResearchMultipart<T>(path: string, formData: FormData): Promise<T> {
+  return requestResearch<T>(path, {
     method: "POST",
     body: formData,
   });
@@ -180,3 +197,124 @@ export async function fetchAudioOverview(): Promise<AudioOverviewPayload> {
 export type DetectionResponse = DetectionResponsePayload;
 export type WaveformPoint = WaveformPointPayload;
 export type StegoAssetResponse = StegoAsset;
+
+interface ResearchEmbedResponsePayload {
+  metrics: Record<string, unknown>;
+  stego_path: string;
+}
+
+interface ResearchExtractResponsePayload {
+  result: Record<string, unknown>;
+  payload_path?: string;
+}
+
+interface ResearchDetectResponsePayload {
+  detections: Array<{ detector: string } & Record<string, unknown>>;
+}
+
+export interface ResearchEmbedParams {
+  carrier: string;
+  method: string;
+  cover: File;
+  payload: Blob | File;
+  options?: Record<string, unknown>;
+}
+
+export interface ResearchExtractParams {
+  carrier: string;
+  method: string;
+  stego: File;
+  options?: Record<string, unknown>;
+}
+
+export interface ResearchDetectParams {
+  carrier: string;
+  stego: File;
+  options?: Record<string, unknown>;
+}
+
+export interface ResearchEmbedResult {
+  metrics: Record<string, unknown>;
+  stegoPath: string;
+}
+
+export interface ResearchExtractResult {
+  metadata: Record<string, unknown>;
+  payloadPath?: string;
+}
+
+export interface ResearchDetectResult {
+  detections: Array<{ detector: string } & Record<string, unknown>>;
+}
+
+export interface ArtifactDownload {
+  blob: Blob;
+  filename: string;
+  contentType: string | null;
+}
+
+export async function researchEmbed(params: ResearchEmbedParams): Promise<ResearchEmbedResult> {
+  const { carrier, method, cover, payload, options } = params;
+  const payloadFile = payload instanceof File ? payload : new File([payload], "payload.bin", { type: "application/octet-stream" });
+  const formData = buildFormData({
+    carrier,
+    method,
+    options: JSON.stringify(options ?? {}),
+    cover,
+    payload: payloadFile,
+  });
+  const response = await postResearchMultipart<ResearchEmbedResponsePayload>("/embed", formData);
+  return {
+    metrics: response.metrics ?? {},
+    stegoPath: response.stego_path,
+  };
+}
+
+export async function researchExtract(params: ResearchExtractParams): Promise<ResearchExtractResult> {
+  const { carrier, method, stego, options } = params;
+  const formData = buildFormData({
+    carrier,
+    method,
+    options: JSON.stringify(options ?? {}),
+    stego,
+  });
+  const response = await postResearchMultipart<ResearchExtractResponsePayload>("/extract", formData);
+  return {
+    metadata: response.result ?? {},
+    payloadPath: response.payload_path,
+  };
+}
+
+export async function researchDetect(params: ResearchDetectParams): Promise<ResearchDetectResult> {
+  const { carrier, stego, options } = params;
+  const formData = buildFormData({
+    carrier,
+    options: JSON.stringify(options ?? {}),
+    stego,
+  });
+  const response = await postResearchMultipart<ResearchDetectResponsePayload>("/detect", formData);
+  return {
+    detections: response.detections ?? [],
+  };
+}
+
+export async function fetchResearchArtifact(path: string): Promise<ArtifactDownload> {
+  const url = new URL(`${researchOrigin}/artifact`);
+  url.searchParams.set("path", path);
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    const text = await response.text();
+    const message = text || `Failed to download artifact (${response.status})`;
+    toast.error(message);
+    throw new Error(message);
+  }
+  const contentType = response.headers.get("content-type");
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const match = disposition.match(/filename="?([^";]+)"?/i);
+  const fallback = path.split("/").pop() ?? "artifact.bin";
+  return {
+    blob: await response.blob(),
+    filename: match ? match[1] : fallback,
+    contentType,
+  };
+}

@@ -1,0 +1,16 @@
+site_name: StegResearch Suite
+site_description: Lawful steganography research and analysis toolkit
+repo_url: https://example.com/repo
+nav:
+  - Quickstart: docs/quickstart.md
+  - Threat Model: docs/threat-model.md
+  - Ethics & Legal: docs/ethics.md
+  - API Reference: docs/api.md
+  - Examples: docs/examples.md
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+plugins:
+  - search
