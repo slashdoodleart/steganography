@@ -9,6 +9,19 @@ RESEARCH_PORT=${RESEARCH_PORT:-8100}
 FRONTEND_HOST=${FRONTEND_HOST:-127.0.0.1}
 FRONTEND_PORT=${FRONTEND_PORT:-5173}
 
+# Detect an available frontend port so macOS users do not crash when 5173 is busy.
+FRONTEND_BIND_PORT=${FRONTEND_PORT}
+if command -v lsof >/dev/null 2>&1; then
+  if lsof -nP -iTCP:"${FRONTEND_BIND_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
+    while lsof -nP -iTCP:"${FRONTEND_BIND_PORT}" -sTCP:LISTEN >/dev/null 2>&1; do
+      FRONTEND_BIND_PORT=$((FRONTEND_BIND_PORT + 1))
+    done
+    echo "[stack] port ${FRONTEND_PORT} busy, using ${FRONTEND_BIND_PORT} for frontend" >&2
+  fi
+else
+  echo "[stack] warning: 'lsof' unavailable, frontend may fail if port ${FRONTEND_BIND_PORT} is busy" >&2
+fi
+
 if [[ ! -x ${PYTHON_BIN} ]]; then
   echo "error: python interpreter '${PYTHON_BIN}' not found or not executable" >&2
   exit 1
@@ -45,10 +58,14 @@ echo "[stack] research suite listening on http://${BACKEND_HOST}:${RESEARCH_PORT
 (
   cd "${ROOT_DIR}"
   VITE_RESEARCH_API_BASE_URL=${VITE_RESEARCH_API_BASE_URL:-"http://${BACKEND_HOST}:${RESEARCH_PORT}"} \
-    npm run dev -- --host "${FRONTEND_HOST}" --port "${FRONTEND_PORT}"
+    npm run dev -- --host "${FRONTEND_HOST}" --port "${FRONTEND_BIND_PORT}"
 ) &
 FRONTEND_PID=$!
-echo "[stack] frontend available at http://${FRONTEND_HOST}:${FRONTEND_PORT}" >&2
+echo "[stack] frontend available at http://${FRONTEND_HOST}:${FRONTEND_BIND_PORT}" >&2
 
 echo "[stack] press Ctrl+C to stop all services" >&2
-wait -n
+if (( BASH_VERSINFO[0] > 4 )) || { (( BASH_VERSINFO[0] == 4 )) && (( BASH_VERSINFO[1] >= 3 )); }; then
+  wait -n
+else
+  wait
+fi
